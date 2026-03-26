@@ -2,14 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
-import { DialogProvider, ApiClient, favicon } from 'common';
-
-// faviconを動的に設定。Commonプロジェクトから配信されるアセットを参照！
-const link = document.createElement('link');
-link.rel = 'icon';
-link.type = 'image/svg+xml';
-link.href = favicon;
-document.head.appendChild(link);
+import { DialogProvider, ApiClient } from 'common';
 
 // アプリ独自のモックや追加不要。MSW起動判定はCommon側に委譲！
 ApiClient.bootstrapApp({
@@ -18,7 +11,13 @@ ApiClient.bootstrapApp({
   // 関数の中身ごと本番の JavaScript ファイルから跡形もなく消滅（Tree-shaking）します！
   enableMocking: import.meta.env.DEV ? async () => {
     const { worker } = await import('./mocks/browser');
-    return worker.start({ onUnhandledRequest: 'bypass' });
+    // base 設定に合わせ、Service Worker のパスを動的に指定！っ😤
+    return worker.start({
+      onUnhandledRequest: 'bypass',
+      serviceWorker: {
+        url: `${import.meta.env.BASE_URL}mockServiceWorker.js`
+      }
+    });
   } : undefined,
   renderApp: () => {
     createRoot(document.getElementById('root')!).render(

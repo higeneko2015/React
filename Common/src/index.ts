@@ -47,7 +47,3 @@ export * as ApiClient from './api';
 
 // --- TanStack Query ---
 export { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-
-// --- Assets ---
-export { default as favicon } from './assets/favicon.svg';
-export { default as icons } from './assets/icons.svg';
