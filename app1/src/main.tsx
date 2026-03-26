@@ -2,7 +2,14 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
-import { DialogProvider, ApiClient } from 'common';
+import { DialogProvider, ApiClient, favicon } from 'common';
+
+// faviconを動的に設定。Commonプロジェクトから配信されるアセットを参照！
+const link = document.createElement('link');
+link.rel = 'icon';
+link.type = 'image/svg+xml';
+link.href = favicon;
+document.head.appendChild(link);
 
 // アプリ独自のモックや追加不要。MSW起動判定はCommon側に委譲！
 ApiClient.bootstrapApp({
