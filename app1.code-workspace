@@ -1,0 +1,18 @@
+{
+  "folders": [
+    {
+      "path": "app1",
+      "name": "💻 アプリ1"
+    },
+    {
+      "path": "Common",
+      "name": "📦 共通部品 (Common)"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true
+    }
+  }
+}

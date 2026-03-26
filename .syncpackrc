@@ -1,0 +1,20 @@
+{
+  "dependencyTypes": ["dev", "prod", "peer"],
+  "index": ["packages/*/package.json", "package.json"],
+  "sortAz": ["dependencies", "devDependencies", "peerDependencies"],
+  "sortFirst": ["name", "version", "description", "author", "license"],
+  "versionGroups": [
+    {
+      "dependencies": ["**"],
+      "packages": ["**"],
+      "isCheckOnly": false
+    }
+  ],
+  "semverGroups": [
+    {
+      "dependencies": ["**"],
+      "packages": ["**"],
+      "range": ""
+    }
+  ]
+}

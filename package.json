@@ -1,0 +1,16 @@
+{
+  "name": "react-monorepo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "check-deps": "syncpack list",
+    "fix-deps": "syncpack fix",
+    "lint-deps": "syncpack lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.32.1"
+}

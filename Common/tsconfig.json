@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    /* 必要に応じてプロジェクト固有の設定をここに追加します */
+  },
+  "include": ["src"]
+}
