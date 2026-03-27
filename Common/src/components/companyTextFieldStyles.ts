@@ -15,10 +15,10 @@ export const containerStyles = tv({
  */
 export const inputStyles = tv({
   base: [
-    "h-[38px] w-full outline-none bg-transparent border-none",
+    "h-[32px] w-full outline-none bg-transparent border-none",
     "font-[family-name:var(--font-family-base,sans-serif)]",
-    "text-[length:var(--font-size-input,14px)]",
-    "py-[var(--input-py,4px)]",
+    "text-[length:var(--font-size-input,13px)]",
+    "py-[var(--input-py,2px)]",
     "px-[var(--input-px,8px)]",
     "leading-normal",
   ],
@@ -46,7 +46,7 @@ export const inputStyles = tv({
  */
 export const groupStyles = tv({
   base: [
-    "h-[38px] relative flex items-center w-full rounded outline-none transition-all",
+    "h-[32px] relative flex items-center w-full rounded outline-none transition-all",
     "border-[length:var(--input-border-width,1px)] border-gray-300 bg-white",
   ],
   variants: {

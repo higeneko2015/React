@@ -35,7 +35,7 @@ const buttonStyles = tv({
     // 💥 修正4: グリッド内外でのレイアウト切り替え
     isInGrid: {
       true: "h-full w-full rounded-none px-2 border-0", // グリッド内：枠・角丸なしでセルに完全同化
-      false: "h-[38px] px-6 rounded border" // 通常時：高さ38px固定、角丸あり
+      false: "h-[32px] px-4 rounded border text-[13px]" // 通常時：高さ32px固定、角丸あり
     }
   },
   compoundVariants: [

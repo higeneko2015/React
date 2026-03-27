@@ -103,7 +103,7 @@ export const EditableCell = memo<EditableCellProps>(({
         }}
         title={errorMsg || undefined}
         style={errorMsg ? { backgroundColor: 'rgb(254 226 226)', outline: '2px solid rgb(239 68 68)', outlineOffset: '-1px' } : undefined}
-        className={`group relative w-full h-[38px] ${isButton ? 'px-0' : 'px-3'} flex items-center ${justifyClass} bg-transparent outline-none cursor-cell`}
+        className={`group relative w-full h-[32px] ${isButton ? 'px-0' : 'px-3'} flex items-center ${justifyClass} bg-transparent outline-none cursor-cell`}
       >
         {isCheckbox ? (
           <Component label="" isSelected={value} onChange={onChange} width="full" textAlign={textAlign} isReadOnly={isReadOnly} isInvalid={!!errorMsg} {...rest} />
@@ -141,9 +141,9 @@ export const EditableCell = memo<EditableCellProps>(({
         }}
         title={errorMsg || undefined}
         style={errorMsg ? { backgroundColor: 'rgb(254 226 226)', outline: '2px solid rgb(239 68 68)', outlineOffset: '-1px' } : undefined}
-        className={`group relative w-full h-[38px] flex items-center ${isCombobox ? 'justify-between' : justifyClass} outline-none cursor-cell bg-transparent select-none ${errorMsg ? 'text-red-700 font-bold' : 'text-gray-900'}`}
+        className={`group relative w-full h-[32px] flex items-center ${isCombobox ? 'justify-between' : justifyClass} outline-none cursor-cell bg-transparent select-none ${errorMsg ? 'text-red-700 font-bold' : 'text-gray-900'}`}
       >
-        <div className={`truncate flex-1 h-full flex items-center px-[var(--input-px,8px)] font-[family-name:var(--font-family-base,sans-serif)] text-[length:var(--font-size-input,14px)] leading-normal ${textAlign === 'right' ? 'justify-end' : textAlign === 'center' ? 'justify-center' : 'justify-start'}`}>
+        <div className={`truncate flex-1 h-full flex items-center px-[var(--input-px,8px)] font-[family-name:var(--font-family-base,sans-serif)] text-[length:var(--font-size-input,13px)] leading-normal ${textAlign === 'right' ? 'justify-end' : textAlign === 'center' ? 'justify-center' : 'justify-start'}`}>
           <span className="truncate">{renderValue()}</span>
         </div>
         {isCombobox && !isReadOnly && (
@@ -159,7 +159,7 @@ export const EditableCell = memo<EditableCellProps>(({
   return (
     <div
       title={errorMsg || undefined}
-      className="w-full h-[38px] relative group"
+      className="w-full h-[32px] relative group"
       onBlur={(e) => {
         const isClickingPopup = e.relatedTarget?.closest('[role="dialog"], [role="listbox"], .react-aria-Popover');
         if (!e.currentTarget.contains(e.relatedTarget) && !isClickingPopup) setIsEditing(false);
@@ -185,9 +185,9 @@ const GridCell = memo(({ cell }: { cell: Cell<any, any> }) => {
     <td
       data-row-index={cell.row.index}
       data-col-index={cell.column.getIndex()}
-      className="border-b border-r border-gray-200 p-0 h-[38px] last:border-r-0 overflow-hidden"
+      className="border-b border-r border-gray-200 p-0 h-[32px] last:border-r-0 overflow-hidden"
     >
-      <div className="h-[38px] w-full relative">
+      <div className="h-[32px] w-full relative">
         {flexRender(cell.column.columnDef.cell, cell.getContext())}
       </div>
     </td>

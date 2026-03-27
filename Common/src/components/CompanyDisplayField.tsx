@@ -5,10 +5,10 @@ import { containerStyles } from './companyTextFieldStyles';
 import { useInGrid } from './InGridContext'; 
 
 const displayValueStyles = tv({
-  base: "flex items-center text-sm truncate px-3 min-h-[38px]",
+  base: "flex items-center text-[13px] truncate px-3 min-h-[32px]",
   variants: {
     isInGrid: {
-      true: "h-[38px] text-gray-900 border-none bg-transparent",
+      true: "h-[32px] text-gray-900 border-none bg-transparent",
       false: "text-gray-900 border border-transparent"
     },
     variant: {
@@ -55,7 +55,7 @@ export const CompanyDisplayField = React.memo((props: CompanyDisplayFieldProps) 
         </div>
       )}
       
-      {/* グリッド内では高さを 38px に固定 */}
+      {/* グリッド内では高さを 32px に固定 */}
       <div className={displayValueStyles({ isInGrid, variant })}>
         {isEmpty ? (!isInGrid ? <span className="text-gray-400">-</span> : null) : value}
       </div>
