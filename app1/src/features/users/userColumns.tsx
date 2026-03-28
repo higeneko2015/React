@@ -22,8 +22,9 @@ interface UseUserColumnsProps {
   handleEditClick: (row: User) => void;
 }
 
+const columnHelper = createColumnHelper<User>();
+
 export function useUserColumns({ updateGridData, handleEditClick }: UseUserColumnsProps) {
-  const columnHelper = createColumnHelper<User>();
 
   const DEPT_OPTIONS = useMemo(() => [
     { label: '営業部', value: 'sales' },
@@ -173,7 +174,7 @@ export function useUserColumns({ updateGridData, handleEditClick }: UseUserColum
         </EditableCell>
       )
     }),
-  ], [updateGridData, handleEditClick, DEPT_OPTIONS, columnHelper]);
+  ], [updateGridData, handleEditClick, DEPT_OPTIONS]);
 
   return { columns, DEPT_OPTIONS };
 }

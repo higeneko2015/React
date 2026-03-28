@@ -31,6 +31,14 @@ export const EditableCell = memo<EditableCellProps>(({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (isEditing && containerRef.current) {
+      const input = containerRef.current.querySelector('input');
+      if (input) input.focus();
+    }
+  }, [isEditing]);
 
   // 💥 Zod による手動バリデーション（スキーマが渡されていれば実行）
   // ただし value が null/undefined（初期表示状態）のときはスキップする
@@ -135,7 +143,13 @@ export const EditableCell = memo<EditableCellProps>(({
             e.preventDefault();
             onChange?.(null);
             setIsEditing(true);
-          } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+          } else if ((e.key.length === 1 || e.key === 'Process' || e.key === 'Unidentified') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            e.preventDefault();
+            if (e.key.length === 1) {
+              onChange?.(e.key);
+            } else {
+              onChange?.('');
+            }
             setIsEditing(true);
           }
         }}
@@ -165,12 +179,7 @@ export const EditableCell = memo<EditableCellProps>(({
         if (!e.currentTarget.contains(e.relatedTarget) && !isClickingPopup) setIsEditing(false);
       }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setIsEditing(false); }}
-      ref={(el) => {
-        if (el) {
-          const input = el.querySelector('input');
-          if (input) input.focus();
-        }
-      }}
+      ref={containerRef}
     >
       <Component label="" value={value} onChange={onChange} width="full" textAlign={textAlign} options={options} isInvalid={!!errorMsg} errorMessage={errorMsg || ''} {...rest} />
       <div className="absolute inset-0 pointer-events-none border-2 border-transparent group-focus-within:border-blue-500 z-20 transition-colors" />
@@ -203,7 +212,7 @@ const GridRow = memo(({ row }: { row: Row<any> }) => {
       ))}
     </tr>
   );
-});
+}, (prev, next) => prev.row.original === next.row.original && prev.row.index === next.row.index);
 GridRow.displayName = 'GridRow';
 
 // ==========================================
@@ -230,7 +239,7 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
   const rowVirtualizer = useVirtualizer({
     count: maxRows,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 38,
+    estimateSize: () => 32,
     overscan: 20, // 画面外の先読み行数を増やして高速スクロール時の白飛びを軽減
   });
 
