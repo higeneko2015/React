@@ -10,11 +10,11 @@ export interface CompanyPageHeaderProps {
 
 export const CompanyPageHeader: React.FC<CompanyPageHeaderProps> = ({ title, description, children, className = '' }) => {
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-gray-200 ${className}`}>
+    <div className={`flex flex-col sm:flex-row sm:items-center justify-between pb-2 mb-3 border-b border-gray-200 ${className}`}>
       <div>
-        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">{title}</h2>
+        <h2 className="text-xl font-bold text-slate-800 tracking-tight">{title}</h2>
         {description && (
-          <p className="mt-1 text-sm text-gray-500">{description}</p>
+          <p className="mt-0.5 text-xs text-gray-500">{description}</p>
         )}
       </div>
       {children && (

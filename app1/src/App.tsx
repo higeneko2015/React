@@ -94,7 +94,7 @@ function App() {
           />
         }
       >
-        <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+        <div className="p-4 space-y-4 max-w-[1600px] mx-auto">
           
           <CompanyPageHeader 
             title="社員情報検索" 

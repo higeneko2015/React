@@ -8,11 +8,8 @@ interface UserSearchFormProps {
 
 export function UserSearchForm({ searchDraft, onSearchDraftChange, onSearch }: UserSearchFormProps) {
   return (
-    <div className="max-w-[1400px] mx-auto bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-      <div className="bg-blue-600 px-6 py-4">
-        <h1 className="text-xl font-bold text-white">社員情報 検索</h1>
-      </div>
-      <div className="p-6 flex flex-col md:flex-row items-end gap-6">
+    <div className="max-w-[1400px] mx-auto bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="p-4 flex flex-col md:flex-row items-end gap-4">
         <div className="w-64">
           <CompanyTextField
             label="氏名（前方一致）"
