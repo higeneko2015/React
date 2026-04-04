@@ -1,11 +1,18 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { ModalOverlay, Modal, Dialog, Heading } from 'react-aria-components';
-import { DialogContext, type DialogOptions } from '../hooks/useDialog';
+import { twMerge } from 'tailwind-merge';
+
+import { DialogContext } from '../hooks/useDialog';
 import { CompanyButton } from '../components/CompanyButton';
 import { setGlobalErrorHandler, clearGlobalErrorHandler } from '../api/client';
 import { useMessage } from '../hooks/useMessage';
 
-const iconMap = {
+// 型のインポートはルール 5 に従って下部へ
+import type { ReactNode } from 'react';
+import type { DialogOptions } from '../hooks/useDialog';
+
+/** 各バリアントに応じたアイコン定義 */
+const ICON_MAP = {
   info: (
     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
       <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -34,14 +41,18 @@ const iconMap = {
       </svg>
     </div>
   )
-};
+} as const;
 
 interface DialogState extends DialogOptions {
   isOpen: boolean;
   type: 'confirm' | 'alert';
 }
 
-export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
+/**
+ * アプリケーション全体で共通のダイアログ（確認・警告・エラー）を表示・制御するための Provider。
+ * APIクライアントと連携し、システムエラー発生時に自動でエラーダイアログを表示する機能も持ちます。
+ */
+export const DialogProvider = React.memo(({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<DialogState>({
     isOpen: false,
     title: '',
@@ -53,6 +64,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
   const resolveRef = useRef<((value: boolean) => void) | null>(null);
   const { t } = useMessage();
 
+  /** 確認ダイアログ（OK/キャンセル）を表示 */
   const confirm = useCallback((options: DialogOptions | string) => {
     return new Promise<boolean>((resolve) => {
       resolveRef.current = resolve;
@@ -68,9 +80,10 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, []);
 
+  /** 通知ダイアログ（OKのみ）を表示 */
   const alert = useCallback((options: DialogOptions | string) => {
     return new Promise<void>((resolve) => {
-      resolveRef.current = resolve as any;
+      resolveRef.current = resolve as unknown as (value: boolean) => void;
       const opts = typeof options === 'string' ? { message: options } : options;
       setState({
         ...opts,
@@ -83,7 +96,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, []);
 
-  // グローバルエラーハンドラを登録・解除する
+  // APIクライアントのグローバルエラーハンドラと接続
   useEffect(() => {
     setGlobalErrorHandler((status, messageKey) => {
       let title = 'システムエラー';
@@ -96,21 +109,16 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
         'E9003': 'セッションの有効期限が切れました。再度ログインしてください。',
       };
 
-      // t 関数はマスタにない場合キーをそのまま返すため、
-      // 翻訳された（キーと異なる）場合のみ採用し、そうでなければフォールバックを使う
       const translated = t(messageKey);
-      const message = translated !== messageKey 
-        ? translated 
+      const message = translated !== messageKey
+        ? translated
         : (fallbacks[messageKey] || translated);
 
       alert({ title, message, variant: 'error' });
     });
 
-    return () => {
-      clearGlobalErrorHandler();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [t]);
+    return () => clearGlobalErrorHandler();
+  }, [t, alert]);
 
   const handleClose = useCallback((result: boolean) => {
     setState((prev) => ({ ...prev, isOpen: false }));
@@ -121,37 +129,33 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const { isOpen, title, message, type, variant = 'confirm', confirmLabel, cancelLabel } = state;
-  const icon = iconMap[variant];
-
-  // variantに応じたOKボタンの色
   const okButtonVariant = variant === 'error' ? 'danger' : variant === 'warning' ? 'secondary' : 'primary';
 
+  const contextValue = useMemo(() => ({ confirm, alert }), [confirm, alert]);
+
   return (
-    <DialogContext.Provider value={{ confirm, alert }}>
+    <DialogContext.Provider value={contextValue}>
       {children}
       <ModalOverlay
         isOpen={isOpen}
-        onOpenChange={(open) => {
-          // モーダル外クリック等で閉じた場合は false(キャンセル) 扱い
-          if (!open) handleClose(false);
-        }}
-        isDismissable={type === 'alert'} // アラートの時は画面外クリックで閉じてOK
-        className={({ isEntering, isExiting }) => `
-          fixed inset-0 z-[100] flex min-h-full items-center justify-center p-4 text-center bg-black/20 backdrop-blur-[1px]
-          ${isEntering ? 'animate-in fade-in duration-200 ease-out' : ''}
-          ${isExiting ? 'animate-out fade-out duration-200 ease-in' : ''}
-        `}
+        onOpenChange={(open) => { if (!open) handleClose(false); }}
+        isDismissable={type === 'alert'}
+        className={({ isEntering, isExiting }) => twMerge(
+          'fixed inset-0 z-[100] flex min-h-full items-center justify-center p-4 text-center bg-black/20 backdrop-blur-[1px]',
+          isEntering && 'animate-in fade-in duration-200 ease-out',
+          isExiting && 'animate-out fade-out duration-200 ease-in'
+        )}
       >
         <Modal
-          className={({ isEntering, isExiting }) => `
-            w-full max-w-md overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl
-            ${isEntering ? 'animate-in zoom-in-95 duration-200 ease-out' : ''}
-            ${isExiting ? 'animate-out zoom-out-95 duration-200 ease-in' : ''}
-          `}
+          className={({ isEntering, isExiting }) => twMerge(
+            'w-full max-w-md overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl',
+            isEntering && 'animate-in zoom-in-95 duration-200 ease-out',
+            isExiting && 'animate-out zoom-out-95 duration-200 ease-in'
+          )}
         >
           <Dialog role={type === 'alert' ? 'alertdialog' : 'dialog'} className="outline-none">
             <div className="flex items-start gap-4">
-              {icon}
+              {ICON_MAP[variant as keyof typeof ICON_MAP]}
               <div className="flex-1">
                 <Heading slot="title" className="text-lg font-bold text-gray-900 mb-2">
                   {title}
@@ -161,20 +165,14 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-6 flex justify-end gap-3">
               {type === 'confirm' && (
-                <CompanyButton
-                  variant="secondary"
-                  onPress={() => handleClose(false)}
-                >
+                <CompanyButton variant="secondary" onPress={() => handleClose(false)}>
                   {cancelLabel || 'キャンセル'}
                 </CompanyButton>
               )}
-              <CompanyButton
-                variant={okButtonVariant}
-                onPress={() => handleClose(true)}
-              >
+              <CompanyButton variant={okButtonVariant} onPress={() => handleClose(true)}>
                 {confirmLabel || 'OK'}
               </CompanyButton>
             </div>
@@ -183,4 +181,6 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
       </ModalOverlay>
     </DialogContext.Provider>
   );
-};
+});
+
+DialogProvider.displayName = 'DialogProvider';

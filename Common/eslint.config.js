@@ -3,6 +3,12 @@ import { defineConfig } from 'eslint/config'
 
 export default defineConfig([
   ...baseConfig,
-  /* Commonプロジェクト固有のルールがあればここに追加 */
+  {
+    // Commonプロジェクト自身はライブラリを直接importしてラップ・再エクスポートするため特例で制限を解除
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
 ])
 

@@ -1,12 +1,21 @@
-import { forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
+
 import { CompanyPhoneField } from '../CompanyPhoneField';
+
+// 型のインポートは一番下に！
 import type { CompanyPhoneFieldProps } from '../CompanyPhoneField';
 
-// ✨ Ai-chan's Special PhoneField Wrapper ✨
-export type FormPhoneFieldProps = CompanyPhoneFieldProps & { name: string; };
+/**
+ * react-hook-form 連携用の電話番号入力コンポーネント。
+ * FormContext から control を取得し、自動で状態をバインドします。
+ */
+export interface FormPhoneFieldProps extends CompanyPhoneFieldProps {
+  /** RHFで管理するためのフィールド名 */
+  name: string;
+}
 
-export const FormPhoneField = forwardRef<HTMLInputElement, FormPhoneFieldProps>(
+export const FormPhoneField = React.memo(forwardRef<HTMLInputElement, FormPhoneFieldProps>(
   ({ name, ...props }, ref) => {
     const { control } = useFormContext();
 
@@ -20,13 +29,13 @@ export const FormPhoneField = forwardRef<HTMLInputElement, FormPhoneFieldProps>(
             value={value}
             onChange={onChange}
             isInvalid={invalid || props.isInvalid}
-            errorMessage={error?.message || props.errorMessage}
+            errorMessage={error?.message ?? props.errorMessage}
             {...props}
           />
         )}
       />
     );
   }
-);
+));
 
 FormPhoneField.displayName = 'FormPhoneField';

@@ -1,12 +1,21 @@
-import { forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
+
 import { CompanyNumberField } from '../CompanyNumberField';
+
+// 型のインポートは一番下に！
 import type { CompanyNumberFieldProps } from '../CompanyNumberField';
 
-// ✨ Ai-chan's Special NumberField Wrapper ✨
-export type FormNumberFieldProps = CompanyNumberFieldProps & { name: string; };
+/**
+ * react-hook-form 連携用の数値入力コンポーネント。
+ * FormContext から control を取得し、自動で状態をバインドします。
+ */
+export interface FormNumberFieldProps extends CompanyNumberFieldProps {
+  /** RHFで管理するためのフィールド名 */
+  name: string;
+}
 
-export const FormNumberField = forwardRef<HTMLInputElement, FormNumberFieldProps>(
+export const FormNumberField = React.memo(forwardRef<HTMLInputElement, FormNumberFieldProps>(
   ({ name, ...props }, ref) => {
     const { control } = useFormContext();
 
@@ -22,13 +31,13 @@ export const FormNumberField = forwardRef<HTMLInputElement, FormNumberFieldProps
               onChange(Number.isNaN(val) ? null : val);
             }}
             isInvalid={invalid || props.isInvalid}
-            errorMessage={error?.message || props.errorMessage}
+            errorMessage={error?.message ?? props.errorMessage}
             {...props}
           />
         )}
       />
     );
   }
-);
+));
 
 FormNumberField.displayName = 'FormNumberField';

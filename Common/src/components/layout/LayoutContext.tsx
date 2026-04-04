@@ -1,28 +1,45 @@
-import { createContext, useContext, useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { LayoutContext } from './useLayout';
+
+// 型のインポートはルール 5 に従って一番下に！
 import type { ReactNode } from 'react';
 
-interface LayoutContextType {
-  isSidebarCollapsed: boolean;
-  toggleSidebar: () => void;
+/**
+ * レイアウトに関する状態（サイドバーの開閉など）を提供するProps。
+ */
+export interface LayoutProviderProps {
+  /** Provider でラップする子要素 */
+  children: ReactNode;
+  /** サイドバーの初期開閉状態（デフォルト: false） */
+  defaultCollapsed?: boolean;
 }
 
-const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
-
-export const LayoutProvider = ({ children, defaultCollapsed = false }: { children: ReactNode, defaultCollapsed?: boolean }) => {
+/**
+ * アプリケーション全体のレイアウト状態を管理する Provider。
+ * サイドバーの折りたたみ状態などを、配下のコンポーネントに共有します。
+ */
+export const LayoutProvider = React.memo(({
+  children,
+  defaultCollapsed = false
+}: LayoutProviderProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(defaultCollapsed);
-  const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
-  
+
+  /** サイドバーの開閉状態を反転させる関数 */
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed(prev => !prev);
+  }, []);
+
+  /** Contextに渡す値をメモ化して、不要な再レンダリングを防止 */
+  const contextValue = useMemo(() => ({
+    isSidebarCollapsed,
+    toggleSidebar
+  }), [isSidebarCollapsed, toggleSidebar]);
+
   return (
-    <LayoutContext.Provider value={{ isSidebarCollapsed, toggleSidebar }}>
+    <LayoutContext.Provider value={contextValue}>
       {children}
     </LayoutContext.Provider>
   );
-};
+});
 
-export const useLayout = () => {
-  const context = useContext(LayoutContext);
-  if (context === undefined) {
-    throw new Error('useLayout must be used within a LayoutProvider. Make sure CompanyHeader and CompanySidebar are used inside CompanyAppShell.');
-  }
-  return context;
-};
+LayoutProvider.displayName = 'LayoutProvider';

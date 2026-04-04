@@ -1,9 +1,21 @@
-import React, { createContext, useContext } from 'react';
+import React from 'react';
+import { InGridContext } from './useInGrid';
 
-const InGridContext = createContext<boolean>(false);
+/**
+ * グリッド内（InGrid）かどうかを子要素に伝えるための Context Provider。
+ * CompanyDataGrid 等の内部で使用され、各種入力フィールドの表示モード（枠線の有無など）を切り替えます。
+ */
+export interface InGridProviderProps {
+  /** Provider でラップする子要素 */
+  children: React.ReactNode;
+  /** グリッド内として扱うかどうかのフラグ（デフォルト: true） */
+  value?: boolean;
+}
 
-export const InGridProvider = ({ children, value = true }: { children: React.ReactNode, value?: boolean }) => (
-  <InGridContext.Provider value={value}>{children}</InGridContext.Provider>
-);
+export const InGridProvider = React.memo(({ children, value = true }: InGridProviderProps) => (
+  <InGridContext.Provider value={value}>
+    {children}
+  </InGridContext.Provider>
+));
 
-export const useInGrid = () => useContext(InGridContext);
+InGridProvider.displayName = 'InGridProvider';

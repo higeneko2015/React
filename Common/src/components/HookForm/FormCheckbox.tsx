@@ -1,12 +1,21 @@
-import { forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
+
 import { CompanyCheckbox } from '../CompanyCheckbox';
+
+// 型のインポートは一番下に！
 import type { CompanyCheckboxProps } from '../CompanyCheckbox';
 
-// ✨ Ai-chan's Special Checkbox Wrapper ✨
-export type FormCheckboxProps = CompanyCheckboxProps & { name: string; };
+/**
+ * react-hook-form 連携用のチェックボックスコンポーネント。
+ * FormContext から control を取得し、自動で状態をバインドします。
+ */
+export interface FormCheckboxProps extends CompanyCheckboxProps {
+  /** RHFで管理するためのフィールド名 */
+  name: string;
+}
 
-export const FormCheckbox = forwardRef<HTMLLabelElement, FormCheckboxProps>(
+export const FormCheckbox = React.memo(forwardRef<HTMLLabelElement, FormCheckboxProps>(
   ({ name, ...props }, ref) => {
     const { control } = useFormContext();
 
@@ -22,13 +31,13 @@ export const FormCheckbox = forwardRef<HTMLLabelElement, FormCheckboxProps>(
             isSelected={!!value}
             onChange={onChange}
             isInvalid={invalid || props.isInvalid}
-            errorMessage={error?.message || props.errorMessage}
+            errorMessage={error?.message ?? props.errorMessage}
             {...props}
           />
         )}
       />
     );
   }
-);
+));
 
 FormCheckbox.displayName = 'FormCheckbox';

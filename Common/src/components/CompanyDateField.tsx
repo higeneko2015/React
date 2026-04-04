@@ -1,26 +1,13 @@
-import React, { useState, forwardRef, useRef, useImperativeHandle, useCallback, useEffect } from 'react';
+import React, { useState, forwardRef, useRef, useImperativeHandle, useCallback } from 'react';
 import { TextField, Label, Group, Input, Button, Popover, Dialog, Calendar, Heading, CalendarGrid, CalendarGridHeader, CalendarHeaderCell, CalendarGridBody, CalendarCell, Text, FieldError, DialogTrigger } from 'react-aria-components';
 import { CalendarDate } from '@internationalized/date';
+import { twMerge } from 'tailwind-merge';
+
 import { useEnterFocus } from '../hooks/useEnterFocus';
 import { useFocusSelect } from '../hooks/useFocusSelect';
 import { containerStyles, inputStyles, groupStyles, labelCommonStyles, descriptionStyles, errorMessageStyles, clearButtonStyles } from './companyTextFieldStyles';
-import { useInGrid } from './InGridContext';
+import { useInGrid } from './useInGrid';
 import { useMessage } from '../hooks/useMessage';
-
-export interface CompanyDateFieldProps {
-  label: string;
-  value?: string | null;
-  onChange?: (value: string | null) => void;
-  formatType?: 'YYYY/MM/DD' | 'YYYY/MM' | 'MM/DD';
-  width?: 'full' | 'auto' | number | string;
-  textAlign?: 'left' | 'center' | 'right'; // 💥 textAlign を追加して他と合わせる
-  isReadOnly?: boolean;
-  isInvalid?: boolean;
-  errorMessage?: string;
-  description?: string;
-  placeholder?: string;
-  isClearable?: boolean;
-}
 
 // 1. スラッシュを強制的に挿入するだけの関数
 const blindFormatDate = (raw: string, type: 'YYYY/MM/DD' | 'YYYY/MM' | 'MM/DD') => {
@@ -75,37 +62,73 @@ const getCalendarDate = (str: string) => {
   return undefined;
 };
 
+/**
+ * 社内システム用共通日付入力フィールド。
+ * YYYY/MM/DD 形式の場合はカレンダーピッカーが利用可能です。
+ * 数字のみの入力でも、フォーカスアウト時に自動でスラッシュを補完します。
+ */
+export interface CompanyDateFieldProps {
+  /** フィールドのラベル */
+  label: string;
+  /** 現在の値（YYYY/MM/DD 等の文字列） */
+  value?: string | null;
+  /** 値が変更された際のコールバック */
+  onChange?: (value: string | null) => void;
+  /** 日付のフォーマット形式（デフォルト: 'YYYY/MM/DD'） */
+  formatType?: 'YYYY/MM/DD' | 'YYYY/MM' | 'MM/DD';
+  /** コンポーネント全体の幅（デフォルト: 'full'） */
+  width?: 'full' | 'auto' | number | string;
+  /** テキストの配置（デフォルト: 'left'） */
+  textAlign?: 'left' | 'center' | 'right';
+  /** 読み取り専用かどうか */
+  isReadOnly?: boolean;
+  /** エラー状態かどうか */
+  isInvalid?: boolean;
+  /** エラー時のメッセージキー */
+  errorMessage?: string;
+  /** 補足説明文 */
+  description?: string;
+  /** プレースホルダーテキスト */
+  placeholder?: string;
+  /** クリア（✕）ボタンを表示するかどうか（デフォルト: false） */
+  isClearable?: boolean;
+  /** 追加のTailwindクラス名（親からのスタイル上書き用） */
+  className?: string;
+}
+
 export const CompanyDateField = React.memo(forwardRef<HTMLInputElement, CompanyDateFieldProps>((props, ref) => {
   const {
     label, value = "", onChange, formatType = 'YYYY/MM/DD', width = "full", textAlign = "left",
     isReadOnly, isInvalid, errorMessage, description, placeholder,
-    isClearable = false,
+    isClearable = false, className,
   } = props;
 
   const isInGrid = useInGrid();
   const { t } = useMessage();
 
   const innerRef = useRef<HTMLInputElement>(null);
-  useImperativeHandle(ref, () => innerRef.current!);
+  useImperativeHandle(ref, () => innerRef.current as HTMLInputElement);
 
-  const [isFocused, setIsFocused] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
-  const [inputValue, setInputValue] = useState(value || "");
+  const safeValue = value ?? "";
+  const [prevValue, setPrevValue] = useState(safeValue);
+  const [inputValue, setInputValue] = useState(safeValue);
   const handleKeyDown = useEnterFocus(isComposing);
 
   const [isOpen, setIsOpen] = useState(false);
   const [internalError, setInternalError] = useState(false);
 
-  useEffect(() => {
-    // 💥 追加: 自分がアクティブ（フォーカス中）なら、入力中の値を上書きしない！
-    if (document.activeElement === innerRef.current) return;
-
-    const safeValue = value || "";
-    setInputValue(safeValue);
-
-    // ※以下は各ファイルに合わせてください（DateFieldならisValidDateStr、TimeFieldならisValidTimeStr）
-    if (isValidDateStr(safeValue, formatType)) setInternalError(false);
-  }, [value, formatType]);
+  // Derived State: Props (value) が変化した場合に同期するパターン
+  if (safeValue !== prevValue) {
+    setPrevValue(safeValue);
+    // 自分がアクティブ（フォーカス中）なら、入力中の値を上書きしない
+    if (document.activeElement !== innerRef.current) {
+      setInputValue(safeValue);
+      if (isValidDateStr(safeValue, formatType)) {
+        setInternalError(false);
+      }
+    }
+  }
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/[^0-9]/g, '');
@@ -114,13 +137,10 @@ export const CompanyDateField = React.memo(forwardRef<HTMLInputElement, CompanyD
   }, [internalError]);
 
   const handleFocus = useFocusSelect(isReadOnly, useCallback(() => {
-    setIsFocused(true);
     setInputValue(prev => (prev || "").replace(/\//g, ''));
   }, []));
 
   const handleBlur = useCallback(() => {
-    setIsFocused(false);
-
     if (!inputValue) {
       setInternalError(false);
       onChange?.(null); // 空の時は null を返す
@@ -151,6 +171,13 @@ export const CompanyDateField = React.memo(forwardRef<HTMLInputElement, CompanyD
     setIsOpen(false);
   }, [onChange]);
 
+  const handleClear = useCallback(() => {
+    setInputValue("");
+    setInternalError(false);
+    onChange?.(null);
+    innerRef.current?.focus();
+  }, [onChange]);
+
   const styleWidth = typeof width === 'number' ? `${width}ch` : (width !== 'full' && width !== 'auto' ? width : undefined);
   const containerWidthProp = (width === 'full' || width === 'auto') ? width : 'auto';
 
@@ -161,17 +188,16 @@ export const CompanyDateField = React.memo(forwardRef<HTMLInputElement, CompanyD
 
   return (
     <TextField
-      className={containerStyles({ width: containerWidthProp })}
+      className={twMerge(containerStyles({ width: containerWidthProp }), className)}
       style={{ width: styleWidth }}
       isReadOnly={isReadOnly}
       isInvalid={effectiveIsInvalid}
     >
-      {/* 💥 修正2: Label は消さずに sr-only で隠す */}
       <Label className={labelCommonStyles({ isInGrid })}>
         {label}
       </Label>
 
-      <Group className={groupStyles({ isFocused, isInvalid: effectiveIsInvalid, isReadOnly, isInGrid })}>
+      <Group className={groupStyles({ isInvalid: effectiveIsInvalid, isReadOnly, isInGrid })}>
         <Input
           ref={innerRef}
           value={inputValue}
@@ -184,36 +210,33 @@ export const CompanyDateField = React.memo(forwardRef<HTMLInputElement, CompanyD
           placeholder={placeholder || (formatType === 'YYYY/MM/DD' ? "YYYY/MM/DD" : formatType)}
           maxLength={formatType === 'YYYY/MM/DD' ? 8 : formatType === 'YYYY/MM' ? 6 : 4}
           inputMode="numeric"
-          // 💥 修正3: inputStyles を使用して美しく適用！ (カレンダーと×ボタンはflex要素なので hasClearButton は false でOK)
           className={inputStyles({ textAlign, hasClearButton: false })}
         />
 
-        {/* クリアボタン（Flexアイテムとして配置） */}
         {hasClearButton && (
           <button
             type="button"
             tabIndex={-1}
-            onClick={() => { setInputValue(""); setInternalError(false); onChange?.(null); innerRef.current?.focus(); }}
+            onClick={handleClear}
             className={clearButtonStyles({ className: "relative right-0" })}
           >✕</button>
         )}
 
-        {/* カレンダーボタン */}
         {formatType === 'YYYY/MM/DD' && (
           <DialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
             <Button
               isDisabled={isReadOnly}
               onKeyDown={handleKeyDown}
-              className={`px-2 h-full flex items-center justify-center border-solid outline-none cursor-pointer shrink-0 transition-colors
-                ${isInGrid ? 'border-none bg-transparent' : 'border-0 border-l border-gray-300 bg-gray-50'}
-                ${effectiveIsInvalid ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'}
-              `}
+              className={twMerge(
+                'px-2 h-full flex items-center justify-center border-solid outline-none cursor-pointer shrink-0 transition-colors',
+                isInGrid ? 'border-none bg-transparent' : 'border-0 border-l border-gray-300 bg-gray-50',
+                effectiveIsInvalid ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'
+              )}
             >
               📅
             </Button>
             <Popover placement="bottom end" className="bg-white p-3 rounded-xl shadow-lg border border-gray-200 z-50 outline-none">
               <Dialog className="outline-none">
-                {/* カレンダー本体は省略せずそのまま */}
                 <Calendar value={getCalendarDate(inputValue)} onChange={handleCalendarChange}>
                   <header className="flex w-full items-center gap-1 pb-2 border-b border-gray-100 mb-2">
                     <Button slot="previous" className="px-2 py-1 rounded hover:bg-gray-100 cursor-pointer outline-none">◀</Button>
@@ -228,12 +251,12 @@ export const CompanyDateField = React.memo(forwardRef<HTMLInputElement, CompanyD
                       {(date) => (
                         <CalendarCell
                           date={date}
-                          className={({ isSelected, isOutsideVisibleRange }) => `
-                            w-8 h-8 flex items-center justify-center rounded-full text-sm cursor-pointer outline-none
-                            ${isOutsideVisibleRange ? 'text-gray-300' : 'text-gray-700 hover:bg-gray-100'}
-                            ${isSelected ? 'bg-blue-600 text-white font-bold shadow-sm' : ''}
-                            focus:ring-2 focus:ring-blue-400 focus:ring-offset-1
-                          `}
+                          className={({ isSelected, isOutsideVisibleRange }) => twMerge(
+                            'w-8 h-8 flex items-center justify-center rounded-full text-sm cursor-pointer outline-none',
+                            isOutsideVisibleRange ? 'text-gray-300' : 'text-gray-700 hover:bg-gray-100',
+                            isSelected ? 'bg-blue-600 text-white font-bold shadow-sm' : '',
+                            'focus:ring-2 focus:ring-blue-400 focus:ring-offset-1'
+                          )}
                         />
                       )}
                     </CalendarGridBody>
@@ -245,9 +268,8 @@ export const CompanyDateField = React.memo(forwardRef<HTMLInputElement, CompanyD
         )}
       </Group>
 
-      {/* 💥 修正4: エラーメッセージ等も isInGrid を見て非表示にする */}
       {!isInGrid && description && !effectiveIsInvalid && <Text slot="description" className={descriptionStyles}>{description}</Text>}
-      {!isInGrid && effectiveIsInvalid && <FieldError className={errorMessageStyles}>{t(effectiveErrorMessage)}</FieldError>}
+      {!isInGrid && effectiveIsInvalid && <FieldError className={errorMessageStyles}>{t(effectiveErrorMessage ?? '')}</FieldError>}
     </TextField>
   );
 }));

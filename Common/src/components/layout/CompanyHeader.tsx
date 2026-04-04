@@ -1,21 +1,35 @@
 import React from 'react';
-import type { ReactNode } from 'react';
-import { useLayout } from './LayoutContext';
+import { useLayout } from './useLayout';
 
+// 型のインポートはルール 5 に従って一番下に！
+import type { ReactNode } from 'react';
+
+/**
+ * 社内システム全体の最上部に表示される共通ヘッダーコンポーネント。
+ * アプリ名、サイドバー開閉ボタン、ユーザー情報、およびカスタムアクションを表示します。
+ */
 export interface CompanyHeaderProps {
+  /** アプリケーションの名前 */
   appName: string;
+  /** ログイン中のユーザー名 */
   userName: string;
-  children?: ReactNode; // 右端のアクション用（通知アイコンなど）
+  /** 右端のアクションエリアに表示するカスタム要素（通知アイコンなど） */
+  children?: ReactNode;
 }
 
-export const CompanyHeader: React.FC<CompanyHeaderProps> = ({ appName, userName, children }) => {
+export const CompanyHeader = React.memo(({
+  appName,
+  userName,
+  children
+}: CompanyHeaderProps) => {
   const { toggleSidebar } = useLayout();
 
   return (
     <header className="flex-shrink-0 h-12 bg-slate-900 text-white flex items-center justify-between px-6 shadow-md z-20 relative">
       <div className="flex items-center gap-2">
-        {/* YouTube風 ハンバーガーメニュー追加 */}
-        <button 
+        {/* サイドバー開閉ボタン */}
+        <button
+          type="button" // 念のため type 指定を追加
           onClick={toggleSidebar}
           className="p-1.5 -ml-2 mr-1 text-gray-300 hover:text-white rounded-full hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
           title="メニューを開閉"
@@ -32,10 +46,10 @@ export const CompanyHeader: React.FC<CompanyHeaderProps> = ({ appName, userName,
         </div>
         <h1 className="text-base font-bold tracking-tight">{appName}</h1>
       </div>
-      
+
       <div className="flex items-center gap-4">
         {children}
-        
+
         {/* ユーザープロフィールエリア */}
         <div className="flex items-center gap-2 border-l border-white/20 pl-4 cursor-pointer hover:bg-white/5 py-1 px-1.5 rounded transition-colors">
           <div className="w-7 h-7 rounded-full bg-gray-300 overflow-hidden border border-slate-700 flex items-center justify-center">
@@ -50,6 +64,6 @@ export const CompanyHeader: React.FC<CompanyHeaderProps> = ({ appName, userName,
       </div>
     </header>
   );
-};
+});
 
 CompanyHeader.displayName = 'CompanyHeader';

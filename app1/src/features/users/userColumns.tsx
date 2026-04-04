@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
+import { createColumnHelper } from '@tanstack/react-table';
 import {
-  createColumnHelper,
   EditableCell,
   CompanyTextField,
   CompanyNumberField,

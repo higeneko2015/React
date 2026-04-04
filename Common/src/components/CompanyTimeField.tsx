@@ -1,26 +1,44 @@
-import React, { useState, forwardRef, useRef, useImperativeHandle, useCallback, useEffect } from 'react';
+import React, { useState, forwardRef, useRef, useImperativeHandle, useCallback } from 'react';
 import { TextField, Label, Group, Input, Text, FieldError } from 'react-aria-components';
+import { twMerge } from 'tailwind-merge';
 
 import { useEnterFocus } from '../hooks/useEnterFocus';
-import { useInGrid } from './InGridContext';
+import { useInGrid } from './useInGrid';
 import { useMessage } from '../hooks/useMessage';
 import { useFocusSelect } from '../hooks/useFocusSelect';
 import { containerStyles, inputStyles, groupStyles, labelCommonStyles, descriptionStyles, errorMessageStyles, clearButtonStyles } from './companyTextFieldStyles';
 
+/**
+ * 社内システム用共通時刻入力フィールド。
+ * 入力時は数字のみを扱い、フォーカスアウト時に指定された形式（HH:mm等）に合わせてコロンを自動挿入します。
+ */
 export interface CompanyTimeFieldProps {
+  /** フィールドのラベル */
   label: string;
+  /** 現在の時刻（コロンあり、またはなしの文字列） */
   value?: string | null;
-  // 💥 修正2: onChangeがnullを返せるように型を調整（クリア時対策）
+  /** 値が変更された際のコールバック（クリア時はnullが返ります） */
   onChange?: (value: string | null) => void;
+  /** 時刻のフォーマット形式（デフォルト: 'HH:mm'） */
   formatType?: 'HH:mm:ss' | 'HH:mm' | 'HH' | 'mm:ss';
+  /** コンポーネント全体の幅（デフォルト: 'full'） */
   width?: 'full' | 'auto' | number | string;
-  textAlign?: 'left' | 'center' | 'right'; // 💥 textAlignを追加
+  /** テキストの配置（デフォルト: 'left'） */
+  textAlign?: 'left' | 'center' | 'right';
+  /** 読み取り専用かどうか */
   isReadOnly?: boolean;
+  /** エラー状態かどうか */
   isInvalid?: boolean;
+  /** エラー時のメッセージキー */
   errorMessage?: string;
+  /** 補足説明文 */
   description?: string;
+  /** プレースホルダーテキスト */
   placeholder?: string;
+  /** クリア（✕）ボタンを表示するかどうか（デフォルト: false） */
   isClearable?: boolean;
+  /** 追加のTailwindクラス名（親からのスタイル上書き用） */
+  className?: string;
 }
 
 const blindFormatTime = (raw: string, type: 'HH:mm:ss' | 'HH:mm' | 'HH' | 'mm:ss') => {
@@ -73,33 +91,35 @@ export const CompanyTimeField = React.memo(forwardRef<HTMLInputElement, CompanyT
   const {
     label, value = "", onChange, formatType = 'HH:mm', width = "full", textAlign = "left",
     isReadOnly, isInvalid, errorMessage, description, placeholder,
-    isClearable = false,
+    isClearable = false, className
   } = props;
 
-  const isInGrid = useInGrid(); // 💥 グリッド判定を取得
+  const isInGrid = useInGrid();
   const { t } = useMessage();
 
   const innerRef = useRef<HTMLInputElement>(null);
-  useImperativeHandle(ref, () => innerRef.current!);
+  useImperativeHandle(ref, () => innerRef.current as HTMLInputElement);
 
-  const [isFocused, setIsFocused] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
 
-  const [inputValue, setInputValue] = useState(value || "");
+  const safeValue = value ?? "";
+  const [prevValue, setPrevValue] = useState(safeValue);
+  const [inputValue, setInputValue] = useState(safeValue);
   const [internalError, setInternalError] = useState(false);
 
   const handleKeyDown = useEnterFocus(isComposing);
 
-  useEffect(() => {
-    // 💥 追加: 自分がアクティブ（フォーカス中）なら、入力中の値を上書きしない！
-    if (document.activeElement === innerRef.current) return;
-
-    const safeValue = value || "";
-    setInputValue(safeValue);
-
-    // ※以下は各ファイルに合わせてください（DateFieldならisValidDateStr、TimeFieldならisValidTimeStr）
-    if (isValidTimeStr(safeValue, formatType)) setInternalError(false);
-  }, [value, formatType]);
+  // Derived State: Props (value) が変化した場合に同期するパターン
+  if (safeValue !== prevValue) {
+    setPrevValue(safeValue);
+    // 自分がアクティブ（フォーカス中）なら、入力中の値を上書きしない
+    if (document.activeElement !== innerRef.current) {
+      setInputValue(safeValue);
+      if (isValidTimeStr(safeValue, formatType)) {
+        setInternalError(false);
+      }
+    }
+  }
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/[^0-9]/g, '');
@@ -108,16 +128,14 @@ export const CompanyTimeField = React.memo(forwardRef<HTMLInputElement, CompanyT
   }, [internalError]);
 
   const handleFocus = useFocusSelect(isReadOnly, useCallback(() => {
-    setIsFocused(true);
     setInputValue(prev => (prev || "").replace(/:/g, ''));
   }, []));
 
   const handleBlur = useCallback(() => {
-    setIsFocused(false);
 
     if (!inputValue) {
       setInternalError(false);
-      onChange?.(null); // 💥 空の場合は null を返す
+      onChange?.(null); // 空の場合は null を返す
       return;
     }
 
@@ -148,23 +166,23 @@ export const CompanyTimeField = React.memo(forwardRef<HTMLInputElement, CompanyT
   const effectiveIsInvalid = isInvalid || internalError;
   const effectiveErrorMessage = internalError ? "有効な時刻を入力してください" : errorMessage;
 
-  // 💥 クリアボタンの有無を判定
+  // クリアボタンの有無を判定
   const hasClearButton = isClearable && !isReadOnly && Boolean(inputValue);
 
   return (
     <TextField
-      className={containerStyles({ width: containerWidthProp })}
+      className={twMerge(containerStyles({ width: containerWidthProp }), className)}
       style={{ width: styleWidth }}
       isReadOnly={isReadOnly}
       isInvalid={effectiveIsInvalid}
     >
-      {/* 💥 修正3: Label を sr-only で隠す */}
+      {/* Label を sr-only で隠す */}
       <Label className={labelCommonStyles({ isInGrid })}>
         {label}
       </Label>
 
-      {/* 💥 修正4: groupStyles に isInGrid を渡す */}
-      <Group className={groupStyles({ isFocused, isInvalid: effectiveIsInvalid, isReadOnly, isInGrid })}>
+      {/* groupStyles に isInGrid を渡す */}
+      <Group className={groupStyles({ isInvalid: effectiveIsInvalid, isReadOnly, isInGrid })}>
         <Input
           ref={innerRef}
           value={inputValue}
@@ -177,11 +195,11 @@ export const CompanyTimeField = React.memo(forwardRef<HTMLInputElement, CompanyT
           placeholder={placeholder || formatType}
           inputMode="numeric"
           maxLength={getMaxLength(formatType)}
-          // 💥 修正5: inputStyles を使用して美しく適用
+          // inputStyles を使用して美しく適用
           className={inputStyles({ textAlign, hasClearButton })}
         />
 
-        {/* 💥 修正6: 他のコンポーネントに合わせて absolute 配置に変更 */}
+        {/* 他のコンポーネントに合わせて absolute 配置に変更 */}
         {hasClearButton && (
           <button
             type="button"
@@ -193,9 +211,9 @@ export const CompanyTimeField = React.memo(forwardRef<HTMLInputElement, CompanyT
         )}
       </Group>
 
-      {/* 💥 修正7: エラーメッセージ等をグリッド内で非表示にする */}
+      {/* エラーメッセージ等をグリッド内で非表示にする */}
       {!isInGrid && description && !effectiveIsInvalid && <Text slot="description" className={descriptionStyles}>{description}</Text>}
-      {!isInGrid && effectiveIsInvalid && <FieldError className={errorMessageStyles}>{t(effectiveErrorMessage)}</FieldError>}
+      {!isInGrid && effectiveIsInvalid && <FieldError className={errorMessageStyles}>{t(effectiveErrorMessage ?? '')}</FieldError>}
     </TextField>
   );
 }));

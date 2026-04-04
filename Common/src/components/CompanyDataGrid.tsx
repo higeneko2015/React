@@ -3,32 +3,40 @@ import {
   useReactTable,
   getCoreRowModel,
   flexRender,
-  type ColumnDef,
-  type Row,
-  type Cell,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { InGridProvider } from './InGridContext';
 import * as z from 'zod';
 
-// ==========================================
-// 💥 EditableCell: グリッド内の編集可能セル
-// ==========================================
-export interface EditableCellProps {
-  value: any;
-  onChange: (val: any) => void;
+import { InGridProvider } from './InGridContext';
+
+// 型のインポートはルール通り一番下に！
+import type { ColumnDef, Row, Cell } from '@tanstack/react-table';
+
+/**
+ * 編集可能セルのプロパティ
+ */
+export interface EditableCellProps<TValue = unknown> {
+  /** セルの現在の値 */
+  value: TValue;
+  /** 値が変更されたときのコールバック */
+  onChange: (val: TValue | null) => void;
+  /** レンダリングに使用するコンポーネント（CompanyButton, CompanyComboBoxなど） */
   component: React.ElementType;
-  formatView?: (val: any) => React.ReactNode;
+  /** 表示用のフォーマット関数 */
+  formatView?: (val: TValue) => React.ReactNode;
+  /** テキストの配置（デフォルト: 'left'） */
   textAlign?: 'left' | 'center' | 'right';
+  /** セレクトボックスやラジオボタンの選択肢 */
   options?: { label: string; value: string }[];
+  /** 読み取り専用かどうか */
   isReadOnly?: boolean;
-  schema?: z.ZodType<any>; // 💥 Zodスキーマを受け取る
-  [key: string]: any;
+  /** Zodスキーマ（入力値のリアルタイムバリデーション用） */
+  schema?: z.ZodTypeAny;
 }
 
-export const EditableCell = memo<EditableCellProps>(({
+const EditableCellInner = <TValue,>({
   value, onChange, component: Component, formatView, textAlign = 'left', options, children, isReadOnly = false, schema, ...rest
-}) => {
+}: EditableCellProps<TValue> & Record<string, unknown> & { children?: React.ReactNode }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,14 +48,11 @@ export const EditableCell = memo<EditableCellProps>(({
     }
   }, [isEditing]);
 
-  // 💥 Zod による手動バリデーション（スキーマが渡されていれば実行）
-  // ただし value が null/undefined（初期表示状態）のときはスキップする
   React.useEffect(() => {
     if (!schema) {
       setErrorMsg(null);
       return;
     }
-    // value が null/undefined のときは「まだ編集されていない初期状態」とみなしてバリデーションしない
     if (value === null || value === undefined || value === '') {
       setErrorMsg(null);
       return;
@@ -60,10 +65,11 @@ export const EditableCell = memo<EditableCellProps>(({
     }
   }, [value, schema]);
 
-  const isCombobox = (Component as any).displayName === 'CompanyComboBox';
-  const isCheckbox = (Component as any).displayName === 'CompanyCheckbox';
-  const isRadio = (Component as any).displayName === 'CompanyRadioGroup';
-  const isButton = (Component as any).displayName === 'CompanyButton';
+  const ComponentInfo = Component as { displayName?: string; formatView?: (val: unknown) => React.ReactNode };
+  const isCombobox = ComponentInfo.displayName === 'CompanyComboBox';
+  const isCheckbox = ComponentInfo.displayName === 'CompanyCheckbox';
+  const isRadio = ComponentInfo.displayName === 'CompanyRadioGroup';
+  const isButton = ComponentInfo.displayName === 'CompanyButton';
 
   const renderValue = () => {
     if (formatView) return formatView(value);
@@ -71,10 +77,58 @@ export const EditableCell = memo<EditableCellProps>(({
       const opt = options.find(o => o.value === String(value));
       if (opt) return opt.label;
     }
-    const componentFormat = (Component as any).formatView;
+    const componentFormat = ComponentInfo.formatView;
     if (typeof componentFormat === 'function') return componentFormat(value);
-    return value || '';
+    return value != null ? String(value) : '';
   };
+
+  // ルール9.1: インライン関数が長すぎたので分離！
+  const handleActionKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isReadOnly) return;
+      if (isButton) {
+        (e.currentTarget.querySelector('button') as HTMLElement)?.click();
+      } else if (isCheckbox) {
+        onChange((!value) as TValue | null);
+      } else if (isRadio) {
+        let values: unknown[] = [];
+        if (options) {
+          values = options.map(o => o.value);
+        } else if (children) {
+          const kids = React.Children.toArray(children) as React.ReactElement<{ value?: unknown }>[];
+          values = kids.map(k => k.props.value).filter(v => v != null);
+        }
+        if (values.length > 0) {
+          const currentIndex = values.indexOf(value);
+          const nextIndex = (currentIndex + 1) % values.length;
+          onChange(values[nextIndex] as TValue | null);
+        }
+      }
+    }
+  }, [isReadOnly, isButton, isCheckbox, isRadio, onChange, value, options, children]);
+
+  // ルール9.1: こちらも分離してスッキリ！
+  const handleViewKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (isReadOnly) return;
+    if (e.key === 'F2' || (e.altKey && e.key === 'ArrowDown')) {
+      e.preventDefault();
+      setIsEditing(true);
+    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+      e.preventDefault();
+      onChange(null);
+      setIsEditing(true);
+    } else if ((e.key.length === 1 || e.key === 'Process' || e.key === 'Unidentified') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      e.preventDefault();
+      if (e.key.length === 1) {
+        onChange(e.key as TValue | null);
+      } else {
+        onChange('' as TValue | null);
+      }
+      setIsEditing(true);
+    }
+  }, [isReadOnly, onChange]);
 
   const justifyClass = textAlign === 'right' ? 'justify-end' : textAlign === 'center' ? 'justify-center' : 'justify-start';
 
@@ -84,31 +138,7 @@ export const EditableCell = memo<EditableCellProps>(({
         tabIndex={0}
         data-view-mode="true"
         onClick={(e) => e.currentTarget.focus()}
-        onKeyDown={(e) => {
-          if (e.key === ' ') {
-            e.preventDefault();
-            e.stopPropagation();
-            if (isReadOnly) return;
-            if (isButton) {
-              (e.currentTarget.querySelector('button') as HTMLElement)?.click();
-            } else if (isCheckbox) {
-              onChange(!value);
-            } else if (isRadio) {
-              let values: any[] = [];
-              if (options) {
-                values = options.map(o => o.value);
-              } else if (children) {
-                const kids = React.Children.toArray(children) as React.ReactElement<any>[];
-                values = kids.map(k => k.props.value).filter(v => v != null);
-              }
-              if (values.length > 0) {
-                const currentIndex = values.indexOf(value);
-                const nextIndex = (currentIndex + 1) % values.length;
-                onChange(values[nextIndex]);
-              }
-            }
-          }
-        }}
+        onKeyDown={handleActionKeyDown}
         title={errorMsg || undefined}
         style={errorMsg ? { backgroundColor: 'rgb(254 226 226)', outline: '2px solid rgb(239 68 68)', outlineOffset: '-1px' } : undefined}
         className={`group relative w-full h-[32px] ${isButton ? 'px-0' : 'px-3'} flex items-center ${justifyClass} bg-transparent outline-none cursor-cell`}
@@ -134,25 +164,7 @@ export const EditableCell = memo<EditableCellProps>(({
         data-view-mode="true"
         onClick={(e) => e.currentTarget.focus()}
         onDoubleClick={() => { if (!isReadOnly) setIsEditing(true); }}
-        onKeyDown={(e) => {
-          if (isReadOnly) return;
-          if (e.key === 'F2' || (e.altKey && e.key === 'ArrowDown')) {
-            e.preventDefault();
-            setIsEditing(true);
-          } else if (e.key === 'Backspace' || e.key === 'Delete') {
-            e.preventDefault();
-            onChange?.(null);
-            setIsEditing(true);
-          } else if ((e.key.length === 1 || e.key === 'Process' || e.key === 'Unidentified') && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            e.preventDefault();
-            if (e.key.length === 1) {
-              onChange?.(e.key);
-            } else {
-              onChange?.('');
-            }
-            setIsEditing(true);
-          }
-        }}
+        onKeyDown={handleViewKeyDown}
         title={errorMsg || undefined}
         style={errorMsg ? { backgroundColor: 'rgb(254 226 226)', outline: '2px solid rgb(239 68 68)', outlineOffset: '-1px' } : undefined}
         className={`group relative w-full h-[32px] flex items-center ${isCombobox ? 'justify-between' : justifyClass} outline-none cursor-cell bg-transparent select-none ${errorMsg ? 'text-red-700 font-bold' : 'text-gray-900'}`}
@@ -185,11 +197,15 @@ export const EditableCell = memo<EditableCellProps>(({
       <div className="absolute inset-0 pointer-events-none border-2 border-transparent group-focus-within:border-blue-500 z-20 transition-colors" />
     </div>
   );
-});
+};
 
-EditableCell.displayName = 'EditableCell';
+export const EditableCell = memo(EditableCellInner) as <TValue = unknown>(
+  props: EditableCellProps<TValue> & Record<string, unknown> & { children?: React.ReactNode }
+) => React.ReactElement;
 
-const GridCell = memo(({ cell }: { cell: Cell<any, any> }) => {
+(EditableCell as unknown as { displayName: string }).displayName = 'EditableCell';
+
+const GridCell = memo(({ cell }: { cell: Cell<unknown, unknown> }) => {
   return (
     <td
       data-row-index={cell.row.index}
@@ -204,7 +220,7 @@ const GridCell = memo(({ cell }: { cell: Cell<any, any> }) => {
 });
 GridCell.displayName = 'GridCell';
 
-const GridRow = memo(({ row }: { row: Row<any> }) => {
+const GridRow = memo(({ row }: { row: Row<unknown> }) => {
   return (
     <tr className="hover:bg-blue-50/20 transition-colors">
       {row.getVisibleCells().map(cell => (
@@ -215,12 +231,15 @@ const GridRow = memo(({ row }: { row: Row<any> }) => {
 }, (prev, next) => prev.row.original === next.row.original && prev.row.index === next.row.index);
 GridRow.displayName = 'GridRow';
 
-// ==========================================
-// 💥 メインのグリッドコンポーネント
-// ==========================================
+/**
+ * 高速描画とキーボードナビゲーションに対応したデータグリッドコンポーネント。
+ */
 export interface CompanyDataGridProps<T extends object> {
+  /** テーブルに表示するデータ配列 */
   data: T[];
-  columns: ColumnDef<T, any>[];
+  /** TanStack Table のカラム定義 */
+  columns: ColumnDef<T, unknown>[];
+  /** コンテナの最大高さ（スクロール領域） */
   maxHeight?: string;
 }
 
@@ -236,18 +255,56 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
   const maxCols = table.getVisibleLeafColumns().length;
 
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const ROW_HEIGHT = 32;
+
   const rowVirtualizer = useVirtualizer({
     count: maxRows,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 32,
-    overscan: 20, // 画面外の先読み行数を増やして高速スクロール時の白飛びを軽減
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 20,
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
   const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
   const paddingBottom = virtualRows.length > 0 ? rowVirtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end : 0;
 
-  // 💥 【修正】キーボードナビゲーションのロジックを強化！
+  const snapScrollPosition = useCallback(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    requestAnimationFrame(() => {
+      const activeEl = document.activeElement as HTMLElement;
+      const td = activeEl?.closest('td[data-row-index]') as HTMLElement | null;
+      if (!td) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const tdRect = td.getBoundingClientRect();
+
+      const thead = container.querySelector('thead');
+      const headerHeight = thead ? thead.getBoundingClientRect().height : 0;
+
+      const tdTopRelative = tdRect.top - containerRect.top;
+      const tdBottomRelative = tdRect.bottom - containerRect.top;
+      const visibleTop = headerHeight;
+      const visibleBottom = container.clientHeight;
+
+      let newScrollTop: number | null = null;
+
+      if (tdTopRelative < visibleTop) {
+        const targetScroll = container.scrollTop - (visibleTop - tdTopRelative);
+        newScrollTop = Math.max(0, Math.floor(targetScroll / ROW_HEIGHT) * ROW_HEIGHT);
+      } else if (tdBottomRelative > visibleBottom) {
+        const targetScroll = container.scrollTop + (tdBottomRelative - visibleBottom);
+        newScrollTop = Math.ceil(targetScroll / ROW_HEIGHT) * ROW_HEIGHT;
+      }
+
+      if (newScrollTop !== null && newScrollTop !== container.scrollTop) {
+        container.scrollTop = newScrollTop;
+      }
+    });
+  }, []);
+
   const handleGridKeyDown = useCallback((e: React.KeyboardEvent<HTMLTableSectionElement>) => {
     if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(e.key)) return;
 
@@ -268,7 +325,6 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
     const currentRow = parseInt(rowIndexStr, 10);
     const currentCol = parseInt(colIndexStr, 10);
 
-    // 💥 行き先を計算する関数に分離
     const step = (r: number, c: number) => {
       let nextR = r;
       let nextC = c;
@@ -290,19 +346,16 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
       return { r: nextR, c: nextC };
     };
 
-    let { r, c } = step(currentRow, currentCol);
+    const { r, c } = step(currentRow, currentCol);
 
     if (r >= 0 && r < maxRows && c >= 0 && c < maxCols) {
-      // まずは目的の行へスクロール！
       rowVirtualizer.scrollToIndex(r);
 
-      // スクロールでDOMが生成されるのを待つ
       setTimeout(() => {
         let currentR = r;
         let currentC = c;
         let foundTarget: HTMLElement | null = null;
 
-        // 💥 ここで「表示専用セル（ID列など）をスキップするループ」を復活！
         while (currentR >= 0 && currentR < maxRows && currentC >= 0 && currentC < maxCols) {
           const nextTd = document.querySelector(`td[data-row-index="${currentR}"][data-col-index="${currentC}"]`);
 
@@ -313,21 +366,22 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
               break;
             }
           } else {
-            // DOMが見つからなかった場合（スクロールが届いていない等）は再度スクロールして諦める
             rowVirtualizer.scrollToIndex(currentR);
             break;
           }
 
-          // 表示専用セルだったら、さらに次のセルへ進める
           const nextPos = step(currentR, currentC);
           currentR = nextPos.r;
           currentC = nextPos.c;
         }
 
-        if (foundTarget) foundTarget.focus();
+        if (foundTarget) {
+          foundTarget.focus();
+          snapScrollPosition();
+        }
       }, 10);
     }
-  }, [maxRows, maxCols, rowVirtualizer]);
+  }, [maxRows, maxCols, rowVirtualizer, snapScrollPosition]);
 
   return (
     <div
@@ -351,7 +405,7 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
             </tr>
           ))}
         </thead>
-        <tbody onKeyDown={handleGridKeyDown} tabIndex={-1} className="outline-none">
+        <tbody onKeyDown={handleGridKeyDown} onFocus={snapScrollPosition} tabIndex={-1} className="outline-none">
           <InGridProvider value={true}>
             {paddingTop > 0 && (
               <tr><td style={{ height: `${paddingTop}px` }} colSpan={maxCols} className="p-0 border-0" /></tr>
@@ -369,6 +423,3 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
     </div>
   );
 };
-
-import { createColumnHelper } from '@tanstack/react-table';
-export { createColumnHelper };

@@ -1,12 +1,21 @@
-import { forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
+
 import { CompanyRadioGroup } from '../CompanyRadioGroup';
+
+// 型のインポートはルール 5 に従って一番下に！
 import type { CompanyRadioGroupProps } from '../CompanyRadioGroup';
 
-// ✨ Ai-chan's Special RadioGroup Wrapper ✨
-export type FormRadioGroupProps = CompanyRadioGroupProps & { name: string; };
+/**
+ * react-hook-form 連携用のラジオボタングループコンポーネント。
+ * FormContext から control を取得し、自動で状態をバインドします。
+ */
+export interface FormRadioGroupProps extends CompanyRadioGroupProps {
+  /** RHFで管理するためのフィールド名 */
+  name: string;
+}
 
-const FormRadioGroupBase = forwardRef<HTMLDivElement, FormRadioGroupProps>(
+const FormRadioGroupBase = React.memo(forwardRef<HTMLDivElement, FormRadioGroupProps>(
   ({ name, ...props }, ref) => {
     const { control } = useFormContext();
 
@@ -20,17 +29,19 @@ const FormRadioGroupBase = forwardRef<HTMLDivElement, FormRadioGroupProps>(
             value={value}
             onChange={onChange}
             isInvalid={invalid || props.isInvalid}
-            errorMessage={error?.message || props.errorMessage}
+            errorMessage={error?.message ?? props.errorMessage}
             {...props}
           />
         )}
       />
     );
   }
-);
+));
 
-export const FormRadioGroup = Object.assign(FormRadioGroupBase, {
-  Radio: CompanyRadioGroup.Radio
-});
+const FormRadioGroupComponent = FormRadioGroupBase as typeof FormRadioGroupBase & {
+  Radio: typeof CompanyRadioGroup.Radio;
+};
+FormRadioGroupComponent.Radio = CompanyRadioGroup.Radio;
 
-FormRadioGroup.displayName = 'FormRadioGroup';
+export { FormRadioGroupComponent as FormRadioGroup };
+FormRadioGroupComponent.displayName = 'FormRadioGroup';
