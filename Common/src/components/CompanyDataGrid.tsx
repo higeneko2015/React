@@ -351,7 +351,11 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
     if (r >= 0 && r < maxRows && c >= 0 && c < maxCols) {
       rowVirtualizer.scrollToIndex(r);
 
-      setTimeout(() => {
+      // ✨ 修正箇所: setTimeout を rAFポーリングに変更！
+      let attempts = 0;
+      const MAX_ATTEMPTS = 10; // 最大10フレーム（約160ms）待機
+
+      const tryFocus = () => {
         let currentR = r;
         let currentC = c;
         let foundTarget: HTMLElement | null = null;
@@ -378,8 +382,15 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
         if (foundTarget) {
           foundTarget.focus();
           snapScrollPosition();
+        } else if (attempts < MAX_ATTEMPTS) {
+          // まだ見つからなければ、次の描画フレームでもう一度探す
+          attempts++;
+          requestAnimationFrame(tryFocus);
         }
-      }, 10);
+      };
+
+      // 最初の探索を開始
+      requestAnimationFrame(tryFocus);
     }
   }, [maxRows, maxCols, rowVirtualizer, snapScrollPosition]);
 
@@ -390,6 +401,7 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
       style={{ maxHeight }}
     >
       <table className="w-full border-collapse text-sm table-fixed">
+        {/* ✨ 修正箇所: スクロール時の突き抜け防止のため z-20 を z-30 に変更！ */}
         <thead className="bg-gray-50 text-gray-700 font-bold sticky top-0 z-30">
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>

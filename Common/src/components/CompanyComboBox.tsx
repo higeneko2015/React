@@ -193,10 +193,13 @@ export const CompanyComboBox = React.memo(forwardRef<HTMLInputElement, CompanyCo
                   };
 
                   if (isOpen && activeDescendant) {
-                    // ドロップダウンが開いていて候補選択中の場合は、少し遅延させてフォーカス移動
-                    setTimeout(() => {
-                      handleEnterFocus(syntheticEvent);
-                    }, 10);
+                    // ✨ 修正箇所: setTimeout(10ms) を排除し、rAFの二重ネストで安全に待機
+                    // Reactの再レンダリングとDOMの更新を確実に待ってからフォーカス移動を実行します
+                    requestAnimationFrame(() => {
+                      requestAnimationFrame(() => {
+                        handleEnterFocus(syntheticEvent);
+                      });
+                    });
                   } else {
                     e.preventDefault();
                     commitLocalValue();
