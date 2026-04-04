@@ -390,7 +390,7 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
       style={{ maxHeight }}
     >
       <table className="w-full border-collapse text-sm table-fixed">
-        <thead className="bg-gray-50 text-gray-700 font-bold sticky top-0 z-20">
+        <thead className="bg-gray-50 text-gray-700 font-bold sticky top-0 z-30">
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
