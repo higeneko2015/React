@@ -186,7 +186,7 @@ export const CompanyComboBox = React.memo(forwardRef<HTMLInputElement, CompanyCo
                   const syntheticEvent = {
                     key: e.key,
                     target: target,
-                    currentTarget: target,
+                    fromElement: target,
                     shiftKey: e.shiftKey,
                     preventDefault: () => { },
                     stopPropagation: () => e.stopPropagation(),
