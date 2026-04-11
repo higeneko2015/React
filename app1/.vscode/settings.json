@@ -8,6 +8,7 @@
     "tsconfig.app.json": true,
     "tsconfig.node.json": true,
     ".agents": true,
-    ".tanstack": true
+    ".tanstack": true,
+    ".vscode": true
   }
 }
