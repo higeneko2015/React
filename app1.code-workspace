@@ -10,9 +10,20 @@
     }
   ],
   "settings": {
+    "files.associations": {
+      "*.css": "tailwindcss"
+    },
+    "css.lint.unknownAtRules": "ignore",
     "files.exclude": {
       "**/node_modules": true,
-      "**/dist": true
-    }
+      "**/dist": true,
+      "**/.agents": true,
+      "**/.tanstack": true,
+      "**/.vscode": true,
+      "**/tsconfig.json": true,
+      "**/tsconfig.app.json": true,
+      "**/tsconfig.node.json": true
+    },
+    "explorer.compactFolders": false
   }
 }
