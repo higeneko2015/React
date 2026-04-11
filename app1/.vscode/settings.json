@@ -10,5 +10,6 @@
     ".agents": true,
     ".tanstack": true,
     ".vscode": true
-  }
+  },
+  "explorer.compactFolders": false
 }
