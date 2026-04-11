@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { useLayout } from './useLayout';
 
@@ -13,6 +13,8 @@ export type MenuItem = {
   label: string;
   /** 表示アイコン（ReactNode） */
   icon?: React.ReactNode;
+  /** 遷移先のパス (TanStack Router 等) */
+  to?: string;
   /** 子階層のメニューリスト */
   children?: MenuItem[];
 };

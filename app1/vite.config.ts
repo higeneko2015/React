@@ -3,11 +3,13 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import fs from 'fs'
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
   base: '/app1/',
   plugins: [
+    TanStackRouterVite({ target: 'react', autoCodeSplitting: true }),
     react(),
     tailwindcss(),
     // 開発環境でも /common/favicon.svg を見られるようにするプラグイン！
@@ -37,6 +39,9 @@ export default defineConfig({
       output: {
         // 💥 関数形式に変更して、モジュールのパス（id）からチャンク名を振り分けます！
         manualChunks(id) {
+          if (id.includes('/Common/src/')) {
+            return 'common';
+          }
           if (id.includes('node_modules')) {
             // react-aria 関連
             if (id.includes('react-aria-components') || id.includes('@react-aria') || id.includes('@react-stately')) {

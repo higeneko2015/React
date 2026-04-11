@@ -24,7 +24,7 @@ export { CompanyDataGrid, EditableCell } from './components/CompanyDataGrid';
 // --- Layout Components ---
 export { CompanyAppShell } from './components/layout/CompanyAppShell';
 export { CompanyHeader } from './components/layout/CompanyHeader';
-export { CompanySidebar } from './components/layout/CompanySidebar';
+export { CompanySidebar, type MenuItem } from './components/layout/CompanySidebar';
 export { CompanyPageHeader } from './components/layout/CompanyPageHeader';
 
 // --- Providers & Hooks ---

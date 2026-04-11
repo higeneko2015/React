@@ -1,7 +1,19 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import App from './App.tsx';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { routeTree } from './routeTree.gen';
+
+const router = createRouter({ 
+  routeTree,
+  basepath: import.meta.env.BASE_URL.replace(/\/$/, '') || '/app1' 
+});
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
 import { DialogProvider, ApiClient } from 'common';
 
 // アプリ独自のモックや追加不要。MSW起動判定はCommon側に委譲！
@@ -25,7 +37,7 @@ ApiClient.bootstrapApp({
         {/* API通信キャッシュのプロバイダーを根っこに配置 */}
         <ApiClient.QueryClientProvider client={ApiClient.queryClient}>
           <DialogProvider>
-            <App />
+            <RouterProvider router={router} />
           </DialogProvider>
         </ApiClient.QueryClientProvider>
       </StrictMode>
