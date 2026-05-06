@@ -6,7 +6,10 @@ import { routeTree } from './routeTree.gen';
 
 const router = createRouter({ 
   routeTree,
-  basepath: import.meta.env.BASE_URL.replace(/\/$/, '') || '/app1' 
+  basepath: import.meta.env.BASE_URL.replace(/\/$/, '') || '/app1',
+  context: {
+    auth: undefined! // 後から InnerApp で注入される
+  }
 });
 
 declare module '@tanstack/react-router' {
@@ -15,24 +18,21 @@ declare module '@tanstack/react-router' {
   }
 }
 import { DialogProvider, AuthProvider, ApiClient } from 'common';
-import type { AuthUser } from 'common';
+import { AppAuthProvider, useAppAuth } from './auth/AppAuthProvider';
 
-// 本来はログインAPIから取得する。今はテスト用にハードコード
-const mockUser: AuthUser = {
-  id: 'hideyuki',
-  name: '英行',
-  roles: ['admin'],
-  permissions: [
-    'employee:read',
-    'employee:create',
-    'employee:edit',
-    'employee:delete',
-    'department:manage',
-    'attendance:read',
-    'payroll:read',
-    'settings:manage',
-  ],
-};
+// TanStack Router と Common AuthProvider をつなぐブリッジコンポーネント
+function InnerApp() {
+  const auth = useAppAuth();
+  
+  return (
+    // Common パッケージの AuthProvider にアプリ側のユーザー状態を流し込む
+    <AuthProvider user={auth.user}>
+      <DialogProvider>
+        <RouterProvider router={router} context={{ auth }} />
+      </DialogProvider>
+    </AuthProvider>
+  );
+}
 
 // アプリ独自のモックや追加不要。MSW起動判定はCommon側に委譲！
 ApiClient.bootstrapApp({
@@ -54,11 +54,10 @@ ApiClient.bootstrapApp({
       <StrictMode>
         {/* API通信キャッシュのプロバイダーを根っこに配置 */}
         <ApiClient.QueryClientProvider client={ApiClient.queryClient}>
-          <AuthProvider user={mockUser}>
-            <DialogProvider>
-              <RouterProvider router={router} />
-            </DialogProvider>
-          </AuthProvider>
+          {/* アプリ全体の認証状態（モック）を管理するプロバイダー */}
+          <AppAuthProvider>
+            <InnerApp />
+          </AppAuthProvider>
         </ApiClient.QueryClientProvider>
       </StrictMode>
     );

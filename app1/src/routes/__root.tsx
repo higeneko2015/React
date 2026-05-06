@@ -1,5 +1,7 @@
 import * as React from 'react'
-import { Outlet, createRootRoute, useNavigate } from '@tanstack/react-router'
+import { Outlet, createRootRouteWithContext, useNavigate, redirect } from '@tanstack/react-router'
+import { useAppAuth } from '../auth/AppAuthProvider'
+import type { AppAuthContextType } from '../auth/AppAuthProvider'
 import {
   CompanyAppShell,
   CompanyHeader,
@@ -33,12 +35,23 @@ const SIDEBAR_MENU: MenuItem[] = [
   }
 ];
 
-export const Route = createRootRoute({
+interface MyRouterContext {
+  auth: AppAuthContextType;
+}
+
+export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RootComponent,
+  beforeLoad: ({ context, location }) => {
+    // ログイン済みでない、かつ現在のパスが /login ではない場合は /login にリダイレクト
+    if (!context.auth.isAuthenticated && location.pathname !== '/login') {
+      throw redirect({ to: '/login' });
+    }
+  },
 })
 
 function RootComponent() {
   const navigate = useNavigate();
+  const { logout, user } = useAppAuth();
   const [currentMenuId, setCurrentMenuId] = React.useState('search');
 
   // 本来はルーティング側で解決するが、今回はメニューのHighlight用に残す
@@ -64,11 +77,22 @@ function RootComponent() {
   return (
     <CompanyAppShell
       header={
-        <CompanyHeader appName="人事総合管理システム" userName="英行">
-          <button className="relative p-2 text-gray-300 hover:text-white transition-colors outline-none rounded-full hover:bg-white/10">
+        <CompanyHeader appName="人事総合管理システム" userName={user?.name || 'ゲスト'}>
+          <button className="relative p-2 text-gray-300 hover:text-white transition-colors outline-none rounded-full hover:bg-white/10 mr-2">
             <span className="text-xl">🔔</span>
             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-slate-900 rounded-full"></span>
           </button>
+          {user && (
+            <button
+              onClick={() => {
+                logout();
+                navigate({ to: '/login' });
+              }}
+              className="text-sm font-bold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors"
+            >
+              ログアウト
+            </button>
+          )}
         </CompanyHeader>
       }
       sidebar={

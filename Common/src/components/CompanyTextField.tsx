@@ -40,6 +40,8 @@ export interface CompanyTextFieldProps {
   description?: string;
   /** プレースホルダーテキスト */
   placeholder?: string;
+  /** input要素のtype属性（デフォルト: 'text'） */
+  type?: 'text' | 'password' | 'email' | 'search' | 'tel' | 'url';
   /** モバイル端末等でのキーボードタイプ */
   inputMode?: 'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search';
   /** モバイル端末等でのEnterキーのラベル（デフォルト: 'next'） */
@@ -54,7 +56,7 @@ export const CompanyTextField = React.memo(forwardRef<HTMLInputElement, CompanyT
   const {
     label, value = "", onChange, width = "full", textAlign = "left",
     maxLength, allowedChars, format,
-    isReadOnly, isInvalid, errorMessage, description, placeholder,
+    isReadOnly, isInvalid, errorMessage, description, placeholder, type = "text",
     inputMode = "text", enterKeyHint = "next",
     isClearable = false, className,
   } = props;
@@ -104,6 +106,7 @@ export const CompanyTextField = React.memo(forwardRef<HTMLInputElement, CompanyT
     <TextField
       className={twMerge(containerStyles({ width: containerWidthProp }), className)}
       style={{ width: styleWidth }}
+      type={type}
       value={displayValue}
       onChange={handleChange}
       isReadOnly={isReadOnly}
