@@ -14,17 +14,18 @@ const SIDEBAR_MENU: MenuItem[] = [
     label: '社員管理',
     icon: '👥',
     children: [
-      { id: 'search', label: '社員情報検索', to: '/employees' },
-      { id: 'register', label: '新規登録', to: '/employees/register' },
-      { id: 'departments', label: '部署管理', to: '/employees/departments' }
+      { id: 'search', label: '社員情報検索', to: '/employees', permission: 'employee:read' },
+      { id: 'register', label: '新規登録', to: '/employees/register', permission: 'employee:create' },
+      { id: 'departments', label: '部署管理', to: '/employees/departments', permission: 'department:manage' }
     ]
   },
-  { id: 'attendance', label: '勤怠管理', icon: '⏰' },
-  { id: 'payroll', label: '給与計算', icon: '💰' },
+  { id: 'attendance', label: '勤怠管理', icon: '⏰', permission: 'attendance:read' },
+  { id: 'payroll', label: '給与計算', icon: '💰', permission: 'payroll:read' },
   {
     id: 'settings',
     label: 'システム設定',
     icon: '⚙️',
+    permission: 'settings:manage',
     children: [
       { id: 'security', label: 'セキュリティ設定' },
       { id: 'audit', label: '監査ログ' }

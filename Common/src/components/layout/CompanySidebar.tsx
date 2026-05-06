@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { useLayout } from './useLayout';
+import { AuthContext } from '../../auth/AuthContext';
 
 /**
  * サイドバーのメニュー項目定義。
@@ -15,6 +16,8 @@ export type MenuItem = {
   icon?: React.ReactNode;
   /** 遷移先のパス (TanStack Router 等) */
   to?: string;
+  /** この項目を表示するために必要な権限キー（省略時は全員に表示） */
+  permission?: string;
   /** 子階層のメニューリスト */
   children?: MenuItem[];
 };
@@ -42,6 +45,10 @@ export const CompanySidebar = React.memo(({
 }: CompanySidebarProps) => {
   // グローバルなレイアウト状態から取得
   const { isSidebarCollapsed: isCollapsed } = useLayout();
+
+  // 権限コンテキスト（AuthProvider が未設置でも安全に動作するよう、直接 useContext を使用）
+  const authContext = useContext(AuthContext);
+  const hasPermission = authContext?.hasPermission ?? (() => true);
 
   // 指定したIDの親階層をすべて特定するユーティリティ
   const getParentPath = useCallback((targetId: string, menuItems: MenuItem[]) => {
@@ -86,7 +93,9 @@ export const CompanySidebar = React.memo(({
 
   // 再帰的にメニューを描画する内部関数（useCallbackで安定化）
   const renderItems = useCallback((menuList: MenuItem[], depth: number = 0) => {
-    return menuList.map((item) => {
+    return menuList
+      .filter((item) => !item.permission || hasPermission(item.permission))
+      .map((item) => {
       const isSelected = item.id === currentId;
       const hasChildren = !!item.children && item.children.length > 0;
       const isExpanded = expandedIds.has(item.id);
@@ -143,7 +152,7 @@ export const CompanySidebar = React.memo(({
         </React.Fragment>
       );
     });
-  }, [currentId, expandedIds, onSelect, toggleExpand]);
+  }, [currentId, expandedIds, onSelect, toggleExpand, hasPermission]);
 
   return (
     <aside

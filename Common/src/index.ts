@@ -28,10 +28,16 @@ export { CompanySidebar, type MenuItem } from './components/layout/CompanySideba
 export { CompanyPageHeader } from './components/layout/CompanyPageHeader';
 
 // --- Providers & Hooks ---
+export { AuthProvider } from './auth/AuthProvider';
+export { usePermission } from './hooks/usePermission';
+export type { AuthUser, Permission } from './auth/AuthContext';
 export { MessageProvider } from './providers/MessageProvider';
 export { DialogProvider } from './providers/DialogProvider';
 export { useMessage } from './hooks/useMessage';
 export { useDialog } from './hooks/useDialog';
+
+// --- Authorization Components ---
+export { Authorized } from './components/Authorized';
 
 // --- React Hook Form & Zod ---
 /** フォームバリデーションと状態管理のための再エクスポート */

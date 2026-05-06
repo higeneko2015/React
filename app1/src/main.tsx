@@ -14,7 +14,25 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
-import { DialogProvider, ApiClient } from 'common';
+import { DialogProvider, AuthProvider, ApiClient } from 'common';
+import type { AuthUser } from 'common';
+
+// 本来はログインAPIから取得する。今はテスト用にハードコード
+const mockUser: AuthUser = {
+  id: 'hideyuki',
+  name: '英行',
+  roles: ['admin'],
+  permissions: [
+    'employee:read',
+    'employee:create',
+    'employee:edit',
+    'employee:delete',
+    'department:manage',
+    'attendance:read',
+    'payroll:read',
+    'settings:manage',
+  ],
+};
 
 // アプリ独自のモックや追加不要。MSW起動判定はCommon側に委譲！
 ApiClient.bootstrapApp({
@@ -36,9 +54,11 @@ ApiClient.bootstrapApp({
       <StrictMode>
         {/* API通信キャッシュのプロバイダーを根っこに配置 */}
         <ApiClient.QueryClientProvider client={ApiClient.queryClient}>
-          <DialogProvider>
-            <RouterProvider router={router} />
-          </DialogProvider>
+          <AuthProvider user={mockUser}>
+            <DialogProvider>
+              <RouterProvider router={router} />
+            </DialogProvider>
+          </AuthProvider>
         </ApiClient.QueryClientProvider>
       </StrictMode>
     );
