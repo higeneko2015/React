@@ -33,8 +33,10 @@ export { usePermission } from './hooks/usePermission';
 export type { AuthUser, Permission } from './auth/AuthContext';
 export { MessageProvider } from './providers/MessageProvider';
 export { DialogProvider } from './providers/DialogProvider';
+export { LoadingProvider } from './providers/LoadingProvider';
 export { useMessage } from './hooks/useMessage';
 export { useDialog } from './hooks/useDialog';
+export { useGlobalLoading } from './hooks/useGlobalLoading';
 
 // --- Authorization Components ---
 export { Authorized } from './components/Authorized';

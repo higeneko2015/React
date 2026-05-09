@@ -34,6 +34,23 @@ export const clearGlobalErrorHandler = () => {
 };
 
 /**
+ * グローバルローディング通知を受け取るリスナーの型定義。
+ */
+type GlobalLoadingHandler = (isLoading: boolean) => void;
+
+let globalLoadingHandler: GlobalLoadingHandler | null = null;
+
+export const setGlobalLoadingHandler = (handler: GlobalLoadingHandler) => {
+  globalLoadingHandler = handler;
+};
+
+export const clearGlobalLoadingHandler = () => {
+  globalLoadingHandler = null;
+};
+
+let activeRequests = 0;
+
+/**
  * アプリケーション共通の Axios インスタンス。
  * 各業務アプリのエントリポイントで `apiClient.defaults.baseURL` を上書きして使用してください。
  */
@@ -51,13 +68,24 @@ export const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
+    activeRequests++;
+    if (activeRequests === 1 && globalLoadingHandler) {
+      globalLoadingHandler(true);
+    }
+
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    activeRequests = Math.max(0, activeRequests - 1);
+    if (activeRequests === 0 && globalLoadingHandler) {
+      globalLoadingHandler(false);
+    }
+    return Promise.reject(error);
+  }
 );
 
 /**
@@ -66,8 +94,19 @@ apiClient.interceptors.request.use(
  * 登録されたグローバルハンドラに通知します。
  */
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    activeRequests = Math.max(0, activeRequests - 1);
+    if (activeRequests === 0 && globalLoadingHandler) {
+      globalLoadingHandler(false);
+    }
+    return response;
+  },
   (error) => {
+    activeRequests = Math.max(0, activeRequests - 1);
+    if (activeRequests === 0 && globalLoadingHandler) {
+      globalLoadingHandler(false);
+    }
+
     const status: number | null = error.response?.status ?? null;
 
     // 業務エラー（400: Bad Request / 422: Unprocessable Entity）は、

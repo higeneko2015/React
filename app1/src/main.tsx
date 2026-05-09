@@ -17,7 +17,7 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
-import { DialogProvider, AuthProvider, ApiClient } from 'common';
+import { DialogProvider, LoadingProvider, AuthProvider, ApiClient } from 'common';
 import { AppAuthProvider, useAppAuth } from './auth/AppAuthProvider';
 
 // TanStack Router と Common AuthProvider をつなぐブリッジコンポーネント
@@ -28,7 +28,9 @@ function InnerApp() {
     // Common パッケージの AuthProvider にアプリ側のユーザー状態を流し込む
     <AuthProvider user={auth.user}>
       <DialogProvider>
-        <RouterProvider router={router} context={{ auth }} />
+        <LoadingProvider>
+          <RouterProvider router={router} context={{ auth }} />
+        </LoadingProvider>
       </DialogProvider>
     </AuthProvider>
   );

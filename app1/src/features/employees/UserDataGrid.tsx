@@ -1,4 +1,4 @@
-import { CompanyLoadingOverlay, CompanyDataGrid, useMessage } from 'common';
+import { CompanyDataGrid, useMessage } from 'common';
 import type { User } from '../../api/users';
 
 interface UserDataGridProps {
@@ -13,11 +13,6 @@ export function UserDataGrid({ gridData, columns, isLoading, isProcessing }: Use
 
   return (
     <div className="relative space-y-8 max-w-[1400px] mx-auto w-full min-h-[400px]">
-      <CompanyLoadingOverlay 
-        isLoading={isLoading || isProcessing} 
-        message={isProcessing ? t('I0002') || "データを保存しています..." : t('I0001') || "社員情報を検索しています..."} 
-        isInsideContainer={false} 
-      />
 
       <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
         <div className="bg-gray-700 px-6 py-3 flex justify-between items-center">

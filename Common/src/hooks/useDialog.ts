@@ -20,11 +20,13 @@ export interface DialogOptions {
  * ダイアログ操作を提供するためのコンテキスト型定義。
  */
 export interface DialogContextType {
-  /** * 確認ダイアログを表示します。
+  /** 確認ダイアログを表示します。
+   * @param options - ダイアログのオプションまたはメッセージ文字列
    * @returns OKなら true、キャンセルなら false を返す Promise
    */
   confirm: (options: DialogOptions | string) => Promise<boolean>;
-  /** * アラートダイアログを表示します。
+  /** アラートダイアログを表示します。
+   * @param options - ダイアログのオプションまたはメッセージ文字列
    * @returns ダイアログが閉じられたときに解決される Promise
    */
   alert: (options: DialogOptions | string) => Promise<void>;
