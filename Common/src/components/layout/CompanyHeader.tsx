@@ -25,7 +25,7 @@ export const CompanyHeader = React.memo(({
   const { toggleSidebar } = useLayout();
 
   return (
-    <header className="flex-shrink-0 h-12 bg-slate-900 text-white flex items-center justify-between px-6 shadow-md z-20 relative">
+    <header className="shrink-0 h-12 bg-slate-900 text-white flex items-center justify-between px-6 shadow-md z-20 relative">
       <div className="flex items-center gap-2">
         {/* サイドバー開閉ボタン */}
         <button

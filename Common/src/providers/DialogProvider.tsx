@@ -238,7 +238,7 @@ export const DialogProvider = React.memo(({ children }: { children: ReactNode })
         onOpenChange={(open) => { if (!open) handleClose(false); }}
         isDismissable={type === 'alert'}
         className={({ isEntering, isExiting }) => twMerge(
-          'fixed inset-0 z-[100] flex min-h-full items-center justify-center p-4 text-center bg-black/20 backdrop-blur-[1px]',
+          'fixed inset-0 z-100 flex min-h-full items-center justify-center p-4 text-center bg-black/20 backdrop-blur-[1px]',
           isEntering && 'animate-in fade-in duration-200 ease-out',
           isExiting && 'animate-out fade-out duration-200 ease-in',
         )}

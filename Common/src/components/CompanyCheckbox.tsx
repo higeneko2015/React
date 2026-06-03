@@ -65,7 +65,7 @@ export const CompanyCheckbox = React.memo(forwardRef<HTMLLabelElement, CompanyCh
         className={({ isReadOnly: ro }) => twMerge(
           'group flex items-center gap-2 text-sm outline-none cursor-pointer',
           ro ? 'opacity-50 cursor-default' : '',
-          isInGrid ? 'h-[32px] px-3' : 'py-1.5'
+          isInGrid ? 'h-8 px-3' : 'py-1.5'
         )}
       >
         {({ isSelected, isFocusVisible, isInvalid: invalid }) => (

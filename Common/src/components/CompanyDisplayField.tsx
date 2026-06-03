@@ -64,7 +64,7 @@ export const CompanyDisplayField = React.memo((props: CompanyDisplayFieldProps) 
     >
       {/* グリッド内ではラベルを表示しない */}
       {!isInGrid && (
-        <div className="text-[length:var(--font-size-label,12px)] font-bold text-gray-700 mb-1">
+        <div className="text-(length:--font-size-label,12px) font-bold text-gray-700 mb-1">
           {label}
         </div>
       )}

@@ -234,7 +234,7 @@ export const CompanyComboBox = React.memo(forwardRef<HTMLInputElement, CompanyCo
           {!isInGrid && description && !isInvalid && <Text slot="description" className={descriptionStyles}>{description}</Text>}
           {!isInGrid && isInvalid && <FieldError className={errorMessageStyles}>{t(errorMessage ?? '')}</FieldError>}
 
-          <Popover className="max-h-60 w-[var(--trigger-width)] overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 outline-none z-50">
+          <Popover className="max-h-60 w-(--trigger-width) overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 outline-none z-50">
             <ListBox className="p-1 outline-none">
               {(option: { id: string; label: string; value: string }) => (
                 <ListBoxItem

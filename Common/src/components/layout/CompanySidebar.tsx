@@ -96,68 +96,68 @@ export const CompanySidebar = React.memo(({
     return menuList
       .filter((item) => !item.permission || hasPermission(item.permission))
       .map((item) => {
-      const isSelected = item.id === currentId;
-      const hasChildren = !!item.children && item.children.length > 0;
-      const isExpanded = expandedIds.has(item.id);
-      const paddingLeft = `${1 + depth * 1.25}rem`;
+        const isSelected = item.id === currentId;
+        const hasChildren = !!item.children && item.children.length > 0;
+        const isExpanded = expandedIds.has(item.id);
+        const paddingLeft = `${1 + depth * 1.25}rem`;
 
-      return (
-        <React.Fragment key={item.id}>
-          <div className="flex flex-col">
-            <button
-              onClick={() => {
-                if (hasChildren) {
-                  toggleExpand(item.id);
-                } else {
-                  onSelect(item.id);
-                }
-              }}
-              className={twMerge(
-                'flex flex-row items-center w-full pr-4 py-2 text-sm transition-all duration-150 text-left outline-none border-r-4',
-                isSelected
-                  ? 'bg-blue-50 text-blue-700 font-bold border-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent',
-                'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500'
-              )}
-              style={{ paddingLeft }}
-              aria-expanded={hasChildren ? isExpanded : undefined}
-              aria-current={isSelected ? 'page' : undefined}
-            >
-              {item.icon && (
-                <span className={twMerge('flex-shrink-0 text-base mr-3', isSelected ? 'text-blue-600' : 'text-gray-400')}>
-                  {item.icon}
-                </span>
-              )}
-              <span className="flex-1 truncate leading-5 select-none">{item.label}</span>
-              {hasChildren && (
-                <span className={twMerge('text-[10px] text-gray-400 transition-transform duration-200 ml-2', isExpanded && 'rotate-180')}>
-                  ▼
-                </span>
-              )}
-            </button>
-          </div>
-
-          {hasChildren && (
-            <div
-              className={twMerge(
-                'grid transition-[grid-template-rows] duration-200 ease-in-out',
-                isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-              )}
-            >
-              <div className="overflow-hidden">
-                {renderItems(item.children!, depth + 1)}
-              </div>
+        return (
+          <React.Fragment key={item.id}>
+            <div className="flex flex-col">
+              <button
+                onClick={() => {
+                  if (hasChildren) {
+                    toggleExpand(item.id);
+                  } else {
+                    onSelect(item.id);
+                  }
+                }}
+                className={twMerge(
+                  'flex flex-row items-center w-full pr-4 py-2 text-sm transition-all duration-150 text-left outline-none border-r-4',
+                  isSelected
+                    ? 'bg-blue-50 text-blue-700 font-bold border-blue-600'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent',
+                  'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500'
+                )}
+                style={{ paddingLeft }}
+                aria-expanded={hasChildren ? isExpanded : undefined}
+                aria-current={isSelected ? 'page' : undefined}
+              >
+                {item.icon && (
+                  <span className={twMerge('shrink-0 text-base mr-3', isSelected ? 'text-blue-600' : 'text-gray-400')}>
+                    {item.icon}
+                  </span>
+                )}
+                <span className="flex-1 truncate leading-5 select-none">{item.label}</span>
+                {hasChildren && (
+                  <span className={twMerge('text-[10px] text-gray-400 transition-transform duration-200 ml-2', isExpanded && 'rotate-180')}>
+                    ▼
+                  </span>
+                )}
+              </button>
             </div>
-          )}
-        </React.Fragment>
-      );
-    });
+
+            {hasChildren && (
+              <div
+                className={twMerge(
+                  'grid transition-[grid-template-rows] duration-200 ease-in-out',
+                  isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                )}
+              >
+                <div className="overflow-hidden">
+                  {renderItems(item.children!, depth + 1)}
+                </div>
+              </div>
+            )}
+          </React.Fragment>
+        );
+      });
   }, [currentId, expandedIds, onSelect, toggleExpand, hasPermission]);
 
   return (
     <aside
       className={twMerge(
-        'flex-shrink-0 h-full bg-white flex flex-col z-10 overflow-x-hidden overflow-y-auto transition-[width,opacity] duration-200 ease-in-out',
+        'shrink-0 h-full bg-white flex flex-col z-10 overflow-x-hidden overflow-y-auto transition-[width,opacity] duration-200 ease-in-out',
         isCollapsed ? 'w-0 opacity-0 border-r-0' : 'w-64 opacity-100 border-r border-gray-200',
         className
       )}
