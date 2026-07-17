@@ -42,17 +42,24 @@ ApiClient.bootstrapApp({
   // 三項演算子で書くことで、Vite のビルド時に false ? ... : undefined となり
   // 関数の中身ごと本番の JavaScript ファイルから跡形もなく消滅（Tree-shaking）します！
   enableMocking: import.meta.env.DEV ? async () => {
+    if ((window as any).__msw_started__) return;
     const { worker } = await import('./mocks/browser');
-    // base 設定に合わせ、Service Worker のパスを動的に指定！っ😤
+    (window as any).__msw_started__ = true;
     return worker.start({
       onUnhandledRequest: 'bypass',
       serviceWorker: {
-        url: `${import.meta.env.BASE_URL}mockServiceWorker.js`
+        url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+        options: { scope: '/' }
       }
     });
   } : undefined,
   renderApp: () => {
-    createRoot(document.getElementById('root')!).render(
+    let root = (window as any).__react_root__;
+    if (!root) {
+      root = createRoot(document.getElementById('root')!);
+      (window as any).__react_root__ = root;
+    }
+    root.render(
       <StrictMode>
         {/* API通信キャッシュのプロバイダーを根っこに配置 */}
         <ApiClient.QueryClientProvider client={ApiClient.queryClient}>

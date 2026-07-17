@@ -424,7 +424,7 @@ export const CompanyDataGrid = <T extends object>({ data, columns, maxHeight = "
             )}
             {virtualRows.map(virtualRow => {
               const row = rows[virtualRow.index];
-              return <GridRow key={row.id} row={row} />;
+              return <GridRow key={row.id} row={row as unknown as Row<unknown>} />;
             })}
             {paddingBottom > 0 && (
               <tr><td style={{ height: `${paddingBottom}px` }} colSpan={maxCols} className="p-0 border-0" /></tr>

@@ -17,6 +17,9 @@ export default defineConfig({
       name: 'serve-common-assets',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
+          if (req.url && req.url.includes('mockServiceWorker.js')) {
+            res.setHeader('Service-Worker-Allowed', '/');
+          }
           if (req.url && req.url.startsWith('/common/')) {
             const assetPath = req.url.replace('/common/', '');
             const filePath = path.resolve(__dirname, '../Common/public', assetPath);

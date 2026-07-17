@@ -2,12 +2,16 @@ packages:
   - 'Common'
   - 'app1'
 
+allowBuilds:
+  esbuild: false
+  msw: false
+
 catalog:
   # Core
-  react: ^19.2.4
-  react-dom: ^19.2.4
-  typescript: ~5.9.3
-  zod: ^4.3.6
+  react: ^19.2.7
+  react-dom: ^19.2.7
+  typescript: ^7.0.2
+  zod: ^4.4.3
 
   # TanStack
   "@tanstack/react-query": ^5.95.2
@@ -17,28 +21,51 @@ catalog:
   "@tanstack/router-plugin": ^1.167.12
 
   # Form & Auth & UI
-  react-hook-form: ^7.71.2
+  react-hook-form: ^7.81.0
   "@hookform/resolvers": ^5.2.2
-  react-aria-components: ^1.16.0
-  "@internationalized/date": ^3.12.0
-  axios: ^1.13.6
-  tailwind-merge: ^3.5.0
+  react-aria-components: ^1.19.0
+  "@internationalized/date": ^3.12.2
+  axios: ^1.18.1
+  tailwind-merge: ^3.6.0
   tailwind-variants: ^3.2.2
 
   # Development & Testing
-  msw: ^2.12.14
-  tailwindcss: ^4.2.1
+  msw: ^2.15.0
+  tailwindcss: ^4.3.2
   "@tailwindcss/vite": ^4.2.1
   vite: ^8.0.0
   "@vitejs/plugin-react": ^6.0.0
 
   # Linting
-  eslint: ^9.39.4
-  "@eslint/js": ^9.39.4
-  typescript-eslint: ^8.56.1
-  eslint-plugin-react-hooks: ^7.0.1
-  eslint-plugin-react-refresh: ^0.5.2
-  globals: ^17.4.0
+  eslint: ^10.6.0
+  "@eslint/js": ^10.0.1
+  typescript-eslint: ^8.63.0
+  eslint-plugin-react-hooks: ^7.1.1
+  eslint-plugin-react-refresh: ^0.5.3
+  globals: ^17.7.0
   "@types/node": ^24.12.0
   "@types/react": ^19.2.14
   "@types/react-dom": ^19.2.3
+
+minimumReleaseAgeExclude:
+  - '@typescript/typescript-aix-ppc64@7.0.2'
+  - '@typescript/typescript-darwin-arm64@7.0.2'
+  - '@typescript/typescript-darwin-x64@7.0.2'
+  - '@typescript/typescript-freebsd-arm64@7.0.2'
+  - '@typescript/typescript-freebsd-x64@7.0.2'
+  - '@typescript/typescript-linux-arm64@7.0.2'
+  - '@typescript/typescript-linux-arm@7.0.2'
+  - '@typescript/typescript-linux-loong64@7.0.2'
+  - '@typescript/typescript-linux-mips64el@7.0.2'
+  - '@typescript/typescript-linux-ppc64@7.0.2'
+  - '@typescript/typescript-linux-riscv64@7.0.2'
+  - '@typescript/typescript-linux-s390x@7.0.2'
+  - '@typescript/typescript-linux-x64@7.0.2'
+  - '@typescript/typescript-netbsd-arm64@7.0.2'
+  - '@typescript/typescript-netbsd-x64@7.0.2'
+  - '@typescript/typescript-openbsd-arm64@7.0.2'
+  - '@typescript/typescript-openbsd-x64@7.0.2'
+  - '@typescript/typescript-sunos-x64@7.0.2'
+  - '@typescript/typescript-win32-arm64@7.0.2'
+  - '@typescript/typescript-win32-x64@7.0.2'
+  - typescript@7.0.2

@@ -1,6 +1,6 @@
 import React, { useState, forwardRef, useRef, useImperativeHandle, useCallback } from 'react';
 import { TextField, Label, Group, Input, Button, Popover, Dialog, Calendar, Heading, CalendarGrid, CalendarGridHeader, CalendarHeaderCell, CalendarGridBody, CalendarCell, Text, FieldError, DialogTrigger } from 'react-aria-components';
-import { CalendarDate } from '@internationalized/date';
+import { CalendarDate, type DateValue } from '@internationalized/date';
 import { twMerge } from 'tailwind-merge';
 
 import { useEnterFocus } from '../hooks/useEnterFocus';
@@ -59,7 +59,7 @@ const getCalendarDate = (str: string) => {
       }
     }
   } catch (e) { }
-  return undefined;
+  return null;
 };
 
 /**
@@ -160,7 +160,8 @@ export const CompanyDateField = React.memo(forwardRef<HTMLInputElement, CompanyD
     }
   }, [inputValue, formatType, value, onChange]);
 
-  const handleCalendarChange = useCallback((date: CalendarDate) => {
+  const handleCalendarChange = useCallback((date: DateValue) => {
+    if (!date) return;
     const yyyy = date.year;
     const mm = String(date.month).padStart(2, '0');
     const dd = String(date.day).padStart(2, '0');
